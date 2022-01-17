@@ -1,0 +1,170 @@
+[Project]
+FileName = Airline.dev
+Name = Airline
+UnitCount = 8
+Type = 1
+Ver = 3
+ObjFiles = 
+Includes = 
+Libs = 
+PrivateResource = Airline_private.rc
+ResourceIncludes = 
+MakeIncludes = 
+Compiler = 
+CppCompiler = 
+Linker = 
+IsCpp = 0
+Icon = Airline.ico
+ExeOutput = 
+ObjectOutput = 
+LogOutput = 
+LogOutputEnabled = 0
+OverrideOutput = 0
+OverrideOutputName = 
+HostApplication = 
+UseCustomMakefile = 0
+CustomMakefile = 
+UsePrecompiledHeader = 0
+PrecompiledHeader = 
+CommandLine = 
+Folders = 
+IncludeVersionInfo = 0
+SupportXPThemes = 0
+CompilerSet = 1
+CompilerSetType = 0
+CompilerSettings = 0000000000110000000001001
+StaticLink = 0
+AddCharset = 1
+Encoding = AUTO
+UseUTF8 = 0
+
+
+[Unit1]
+FileName = nodeFunction.h
+Folder = 
+Compile = 1
+Link = 1
+Priority = 1000
+OverrideBuildCmd = 0
+BuildCmd = 
+DetectEncoding = 1
+FileEncoding = AUTO
+CompileCpp = 0
+Encoding = 0
+
+
+[VersionInfo]
+Major = 1
+Minor = 0
+Release = 0
+Build = 0
+LanguageID = 1033
+CharsetID = 1252
+CompanyName = 
+FileVersion = 
+FileDescription = Developed using the Red Panda Dev-C++ IDE
+InternalName = 
+LegalCopyright = 
+LegalTrademarks = 
+OriginalFilename = 
+ProductName = 
+ProductVersion = 
+AutoIncBuildNr = 0
+SyncProduct = 1
+
+
+[Unit2]
+FileName = nodeFunction.c
+CompileCpp = 0
+Folder = 
+Compile = 1
+Link = 1
+Priority = 1000
+OverrideBuildCmd = 0
+BuildCmd = 
+DetectEncoding = 1
+FileEncoding = AUTO
+Encoding = 0
+
+
+[Unit3]
+FileName = main.c
+CompileCpp = 0
+Folder = 
+Compile = 1
+Link = 1
+Priority = 1000
+OverrideBuildCmd = 0
+BuildCmd = 
+DetectEncoding = 1
+FileEncoding = AUTO
+Encoding = 0
+
+
+[Unit4]
+FileName = fileIO.c
+CompileCpp = 0
+Folder = 
+Compile = 1
+Link = 1
+Priority = 1000
+OverrideBuildCmd = 0
+BuildCmd = 
+DetectEncoding = 1
+FileEncoding = AUTO
+Encoding = 0
+
+
+[Unit5]
+FileName = fileIO.h
+CompileCpp = 0
+Folder = 
+Compile = 1
+Link = 1
+Priority = 1000
+OverrideBuildCmd = 0
+BuildCmd = 
+DetectEncoding = 1
+FileEncoding = AUTO
+Encoding = 0
+
+
+[Unit6]
+FileName = function.c
+CompileCpp = 0
+Folder = 
+Compile = 1
+Link = 1
+Priority = 1000
+OverrideBuildCmd = 0
+BuildCmd = 
+DetectEncoding = 1
+FileEncoding = AUTO
+Encoding = 0
+
+
+[Unit7]
+FileName = readme.md
+Folder = 
+Compile = 1
+Link = 1
+Priority = 1000
+OverrideBuildCmd = 0
+BuildCmd = 
+DetectEncoding = 1
+FileEncoding = AUTO
+Encoding = 0
+
+
+[Unit8]
+FileName = function.h
+CompileCpp = 0
+Folder = 
+Compile = 1
+Link = 1
+Priority = 1000
+OverrideBuildCmd = 0
+BuildCmd = 
+DetectEncoding = 1
+FileEncoding = AUTO
+Encoding = 0

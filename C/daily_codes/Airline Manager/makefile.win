@@ -1,0 +1,43 @@
+# Project: Airline
+# Makefile created by Red Panda Dev-C++ beta.0.12.2
+
+CPP      = g++.exe
+CC       = gcc.exe
+WINDRES  = windres.exe
+RES      = Airline_private.res
+OBJ      = nodeFunction.o main.o fileIO.o function.o $(RES)
+LINKOBJ  = nodeFunction.o main.o fileIO.o function.o $(RES)
+CLEANOBJ  =  nodeFunction.o main.o fileIO.o function.o $(RES)
+LIBS     = 
+INCS     =  
+CXXINCS  =  
+BIN      = Airline.exe
+CXXFLAGS = $(CXXINCS)  -Wall -Wextra -g3 -pipe -D__DEBUG__
+CFLAGS   = $(INCS)  -Wall -Wextra -g3 -pipe -D__DEBUG__
+RM       = del /q /f
+
+.PHONY: all all-before all-after clean clean-custom
+
+all: all-before $(BIN) all-after
+
+clean: clean-custom
+	${RM} $(CLEANOBJ) $(BIN) > NUL 2>&1
+
+$(BIN): $(OBJ)
+	$(CC) $(LINKOBJ) -o $(BIN) $(LIBS)
+
+nodeFunction.o: nodeFunction.c nodeFunction.h
+	$(CC) -c "C:/Users/zenor/OneDrive/文档/Codes/Airline Manager/nodeFunction.c" -o nodeFunction.o $(CFLAGS) 
+
+main.o: main.c fileIO.h nodeFunction.h function.h
+	$(CC) -c "C:/Users/zenor/OneDrive/文档/Codes/Airline Manager/main.c" -o main.o $(CFLAGS) 
+
+fileIO.o: fileIO.c nodeFunction.h
+	$(CC) -c "C:/Users/zenor/OneDrive/文档/Codes/Airline Manager/fileIO.c" -o fileIO.o $(CFLAGS) 
+
+function.o: function.c nodeFunction.h function.h
+	$(CC) -c "C:/Users/zenor/OneDrive/文档/Codes/Airline Manager/function.c" -o function.o $(CFLAGS) 
+
+Airline_private.res: Airline_private.rc 
+	$(WINDRES) -i Airline_private.rc --input-format=rc -o Airline_private.res -O coff 
+
