@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdbool.h>
+#include <string.h>
 
 // Max number of candidates
 #define MAX 9
@@ -14,6 +15,7 @@ int preferences[MAX][MAX];
 bool locked[MAX][MAX];
 
 // Each pair has a winner, loser
+// use to store candidates' index
 typedef struct
 {
 	int winner;
@@ -21,6 +23,8 @@ typedef struct
 } pair;
 
 // Array of candidates
+// MAX * (MAX - 1) / 2 which means maximum pairs count
+// (use the combination(am I right?))
 char *candidates[MAX];
 pair pairs[MAX * (MAX - 1) / 2];
 
@@ -46,7 +50,6 @@ int main(int argc, char *argv[])
 	}
 
 	// Populate array of candidates
-	//
 	candidate_count = argc - 1;
 	if (candidate_count > MAX)
 	{
@@ -59,6 +62,7 @@ int main(int argc, char *argv[])
 	}
 
 	// Clear graph of locked in pairs
+	// Consider to use memset()
 	for (int i = 0; i < candidate_count; i++)
 	{
 		for (int j = 0; j < candidate_count; j++)
@@ -68,7 +72,9 @@ int main(int argc, char *argv[])
 	}
 
 	pair_count = 0;
-	int voter_count = get_int("Number of voters: ");
+	int voter_count;	// = get_int("Number of voters: ");
+	printf("Number of voters: ");
+	scanf("%d", &voter_count);
 
 	// Query for votes
 	for (int i = 0; i < voter_count; i++)
@@ -79,7 +85,9 @@ int main(int argc, char *argv[])
 		// Query for each rank
 		for (int j = 0; j < candidate_count; j++)
 		{
-			char *name = get_string("Rank %i: ", j + 1);
+			char name[20];	// = get_string("Rank %i: ", j + 1);
+			printf("Rank %i: ", j + 1);
+			scanf("%s", name);
 
 			if (!vote(j, name, ranks))
 			{
@@ -104,13 +112,37 @@ int main(int argc, char *argv[])
 bool vote(int rank, char *name, int ranks[])
 {
 	// TODO
-	return false;
+	// Find the index of candidates 
+	// if exist
+		// write rank data into ranks[index]
+	// if not
+		// return false;
+
+	// Find the index of candidates
+	int index = -1;
+	for (index = 0; index < candidate_count; index++)
+	{
+		if (strcmp(name, candidates[index]) == 0)
+		{
+			ranks[index] = rank;
+			return true;
+		}
+	}
+	if (index == -1)
+	{
+		return false;
+	}
 }
 
 // Update preferences given one voter's ranks
 void record_preferences(int ranks[])
 {
 	// TODO
+	// Read the data one by one
+	// according to the ranks[], update the 2D-array preferences[]
+
+
+	// Eventually, we'll got an array which store all the candidates compare data.
 	return;
 }
 
@@ -118,6 +150,12 @@ void record_preferences(int ranks[])
 void add_pairs(void)
 {
 	// TODO
+	// Go through the preference[]
+	// Record the data by natural order
+	// e.g. AB, AC, AD, BC, etc.
+
+	// use global varibal pair_count
+
 	return;
 }
 
@@ -125,6 +163,15 @@ void add_pairs(void)
 void sort_pairs(void)
 {
 	// TODO
+	// Go through pairs[], match corresponding preference
+	// May use selection sort
+
+
+	// or create an another array
+	// which stores the strength of victory
+	// the sort the pairs by this array
+
+	// NEED a pair swap function
 	return;
 }
 
@@ -132,6 +179,12 @@ void sort_pairs(void)
 void lock_pairs(void)
 {
 	// TODO
+	// Aim is to NOT create any cycle.
+	// Once add a pair, check if cycle
+
+	// HOW to implement check cycle?
+
+
 	return;
 }
 
@@ -139,5 +192,16 @@ void lock_pairs(void)
 void print_winner(void)
 {
 	// TODO
+
+
+	// Find the SOURCE of nodes
+	// Go through pairs, check if locked
+	// reference to locked[]
+	// CONDITION: the one who wins >=1 && no loses.
+
+
+
 	return;
 }
+
+
