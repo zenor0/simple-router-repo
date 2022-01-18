@@ -6,8 +6,8 @@
 
 typedef struct  //定义候选人数据类型
 {
-    string name;
-    int votes;
+	string name;
+	int votes;
 }
 candidate;
 //初始化候选人类型数据
