@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${fileDirname}\\${fileBasenameNoExtension}.exe",
-            "args": [],
+            "args": ["input.wav","output.wav", "2.0"],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",
             "environment": [],
