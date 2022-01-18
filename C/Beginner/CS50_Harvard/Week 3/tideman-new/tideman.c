@@ -18,8 +18,7 @@ typedef struct
 {
     int winner;
     int loser;
-}
-pair;
+} pair;
 
 // Array of candidates
 char *candidates[MAX];
@@ -39,6 +38,7 @@ void print_winner(void);
 int main(int argc, char *argv[])
 {
     // Check for invalid usage
+    // 检查是否正确传入参数
     if (argc < 2)
     {
         printf("Usage: tideman [candidate ...]\n");
@@ -46,6 +46,7 @@ int main(int argc, char *argv[])
     }
 
     // Populate array of candidates
+    //
     candidate_count = argc - 1;
     if (candidate_count > MAX)
     {
@@ -140,4 +141,3 @@ void print_winner(void)
     // TODO
     return;
 }
-
