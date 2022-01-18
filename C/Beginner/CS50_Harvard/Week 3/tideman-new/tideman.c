@@ -62,12 +62,14 @@ int main(int argc, char *argv[])
 	}
 
 	// Clear graph of locked in pairs
+	// Add initialize preferences array
 	// Consider to use memset()
 	for (int i = 0; i < candidate_count; i++)
 	{
 		for (int j = 0; j < candidate_count; j++)
 		{
 			locked[i][j] = false;
+			preferences[i][j] = 0;
 		}
 	}
 
@@ -140,9 +142,14 @@ void record_preferences(int ranks[])
 	// TODO
 	// Read the data one by one
 	// according to the ranks[], update the 2D-array preferences[]
-
-
-	// Eventually, we'll got an array which store all the candidates compare data.
+	for (int i = 0; i < candidate_count - 1; i++)
+	{
+		for (int j = i + 1; j < candidate_count; j++)
+		{
+			preferences[ranks[i]][ranks[j]]++;
+		}
+	}
+	// Eventually, we'll have an array which store all the candidates compare data.
 	return;
 }
 
@@ -154,6 +161,28 @@ void add_pairs(void)
 	// Record the data by natural order
 	// e.g. AB, AC, AD, BC, etc.
 
+	for (int i = 0; i < candidate_count - 1; i++)
+	{
+		for (int j = i + 1; j < candidate_count; j++)
+		{
+			if (preferences[i][j] > preferences[j][i])
+			{
+				pairs[pair_count].winner = i;
+				pairs[pair_count].loser = j;
+				pair_count++;
+			}
+			else if (preferences[i][j] < preferences[j][i])
+			{
+				pairs[pair_count].winner = j;
+				pairs[pair_count].loser = i;
+				pair_count++;
+			}
+			else
+			{
+				continue;
+			}
+		}
+	}
 	// use global varibal pair_count
 
 	return;
@@ -171,7 +200,35 @@ void sort_pairs(void)
 	// which stores the strength of victory
 	// the sort the pairs by this array
 
-	// NEED a pair swap function
+	// I chose the 2nd way.
+	// Create strength array
+	int strength[pair_count];
+	for (int i = 0; i < pair_count; i++)
+	{
+		strength[i] = abs(preferences[pairs[i].winner][pairs[i].loser]
+						- preferences[pairs[i].loser][pairs[i].winner]);
+	}
+
+	// Bubble sort
+	pair tempPair;
+	int tempInt;
+	for (int i = 0; i < pair_count; i++)
+	{
+		for (int j = 0; j < pair_count; j++)
+		{
+			if (strength[i] < strength[j])
+			{
+				tempPair = pairs[i];
+				pairs[i] = pairs[j];
+				pairs[j] = pairs[i];
+				// I know, it's silly. it makes two array's index simultaneous.
+				tempInt = strength[i];
+				strength[i] = strength[j];
+				strength[j] = strength[i];
+			}
+		}
+	}
+
 	return;
 }
 
@@ -179,10 +236,10 @@ void sort_pairs(void)
 void lock_pairs(void)
 {
 	// TODO
-	// Aim is to NOT create any cycle.
+	// Aim is NOT to create any cycle.
 	// Once add a pair, check if cycle
 
-	// HOW to implement check cycle?
+	// HOW to implement checking cycle?
 
 
 	return;
