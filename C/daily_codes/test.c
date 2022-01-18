@@ -7,6 +7,11 @@ int main(void)
 	printf("this it a test");
 
 	int num;
+
+	//int unusedvar;
+	printf("Print");
+
+
 	scanf("%d", &num);
 
 	FactorialEZ(num);
