@@ -1,4 +1,4 @@
-//#include <cs50.h>
+// #include <cs50.h>
 // Avoid using cs50.h, but implement all its functions myself.
 
 #include <stdio.h>
