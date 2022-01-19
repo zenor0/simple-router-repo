@@ -1,15 +1,16 @@
 #include <iostream>
 
+
 int main(void)
 {
-	std::cout << "Hello C++!" << std::endl;
+	int v1;
+	int v2;
+	std::cout << "Hello, world" << std::endl;
 
-	for (int i = 0; i < 10; i++)
-	{
-		std::cout << "For loop iteration:" << i << std::endl;
-	}
-	
-	std::cout << "End of program." << std::endl;
-	
+	std::cin >> v1;
+	std::cin >> v2;
+
+	std::cout << v1 + v2 << "   " << v1 * v2 << std::endl;
+
 	return 0;
 }
