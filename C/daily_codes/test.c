@@ -3,10 +3,7 @@
 int main(void)
 {
 	// test var and shit
-	int a, c;
+	printf("VS Code 的中文支持好吗?");
 
-	int b = c;
-
-
-	return 0; 
+	return 0;
 }
