@@ -1,9 +1,13 @@
 #ifndef ERRCODE___
 #define ERRCODE___
 
-#define WRONG_ARGUMENTS -1
-#define READ_RULE_ERR -2
-#define READ_DATA_ERR -3
+#define WRONG_ARGUMENTS -100
+#define FILE_OPEN_ERR -200
+
+// Function codes
+
+#define INVALID_INPUT -1
+
 
 #endif
 
@@ -15,16 +19,21 @@
 
 #endif
 
-
-#ifndef CORE___
-#define CORE___
-
-#include <stdbool.h>
+#ifndef CONFIG____
+#define CONFIG____
 
 #define PROGRAM_NAME "simple-router"
 #define MAX_RULE 1000
 #define MAX_DATA 1000
-#define DEBUGGING_MODE 0
+#define DEBUGGING_MODE 1
+
+#endif
+
+#ifndef CORE______
+#define CORE______
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
 
 typedef struct
 {
@@ -47,8 +56,9 @@ typedef struct Rnode
 {
 	RULEItem item;
 	struct Rnode *next;
-};
+} RULENode;
 
+typedef RULENode * RULEList; 
 
 typedef struct
 {
@@ -57,5 +67,15 @@ typedef struct
 	unsigned int port;
 	unsigned int proto;
 } DATA;
+
+#endif
+
+
+
+#ifndef COREFUN___
+#define COREFUN___
+
+unsigned int ConvertIPToInt(char ip[]);
+char *CovertIntToIPFormatted(int ip);
 
 #endif

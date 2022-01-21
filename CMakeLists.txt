@@ -4,6 +4,8 @@ project(simple-router VERSION 0.1.0)
 include(CTest)
 enable_testing()
 
+add_compile_options(-Wall -Wextra)
+
 aux_source_directory(. DIR_SRCS)
 
 add_executable(simple-router ${DIR_SRCS})
