@@ -8,7 +8,8 @@ int ReadRule(char *filename, RULEList *list)
 	FILE *fp;
 	if (DEBUGGING_MODE)
 	{
-		fp = fopen("D:\\Projects\\Codes\\programming-daily\\C\\simple-router\\build\\debug-rule", "r");
+		printf("DEBUG: Read the specific rule file.\n");
+		fp = fopen(DEBUG_RULE_DIR, "r");
 	}
 	else
 	{
@@ -33,7 +34,7 @@ int ReadRule(char *filename, RULEList *list)
 		// Check if reach the limit
 		if (!(readCount < MAX_RULE))
 		{
-			printf("max!\n");
+			printf("INFO: Up to software limit.\n");
 			break;
 			//return READ_ENCOUNTER_MAX;
 		}
@@ -46,7 +47,10 @@ int ReadRule(char *filename, RULEList *list)
 		if (fscanf(fp, "@%[^/]/%*u\t%[^/]/%*u\t%u : %u\t%u : %u\t%x/%x\n"	, sourceIP, destinationIP, &new->item.S_port.start, &new->item.S_port.end
 																	, &new->item.D_port.start, &new->item.D_port.end, &new->item.proto.start, &new->item.proto.end) != 8)
 		{
-			printf("encouter file end or file format error\n");
+			if (DEBUGGING_MODE)
+			{
+				printf("DEBUG: Encouter EOF or Wrong file format.\n");
+			}
 			break;
 			//return READ_DONE_EOF;
 		}

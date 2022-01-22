@@ -1,6 +1,12 @@
 #include <stdio.h>
+#include <time.h>
 #include "fileIO.h"
 #include "core.h"
+
+
+// Time clock
+clock_t startReadRule, endReadRule;
+clock_t startMatch, endMatch;
 
 int main(int argc, char *argv[])
 {
@@ -13,15 +19,21 @@ int main(int argc, char *argv[])
 
 	if (DEBUGGING_MODE)
 	{
-		argv[2] = "D:\\Projects\\Codes\\programming-daily\\C\\simple-router\\build\\debug-data";
+		printf("DEBUG: Overwrite dataset to the specific file.");
+		argv[2] = DEBUG_DATA_DIR;
 	}
+
+	startReadRule = clock();
 	// Open rule file
 	RULEList rList = NULL;
 	ReadRule(argv[1], &rList);
 
+	endReadRule = clock();
+
+	// Show the rule list
 	if (DEBUGGING_MODE)
 	{
-		printf("Show the rules readed:\n");
+		printf("DEBUG: Show the rules readed:\n");
 		RULEList temp = rList;
 		while (temp != NULL)
 		{
@@ -33,7 +45,18 @@ int main(int argc, char *argv[])
 	// Open data file
 	// Go through the rule liken list 
 	// Match the rule, return the result
+
+	startMatch = clock();
+
 	MatchAndWrite(argv[2], RESULTFILE_NAME, &rList);
+
+	endMatch = clock();
+
+	printf("=================\n");
+	printf("TIME (in cpu clock):\n");
+	printf("Read rule: %d\n", endReadRule - startReadRule);
+	printf("Match data: %d\n", endMatch - startMatch);
+
 
 	return 0;
 }

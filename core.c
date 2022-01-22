@@ -101,7 +101,7 @@ int MatchRule(DATA *input, RULEList rList)
 	{
 		if (result == -1)
 		{
-			printf("NOT MATCH! Here is DEBUG info:\n");
+			printf("DEBUG: NOT MATCH!\n");
 			printf("INPUT:\n");
 			printf("(DEC)Source IP = %u\tDestination IP = %u\n", input->S_ip, input->D_ip);
 			printf("(STR)Source IP = %s\tDestination IP = %s\n", ConvertIntToIPFormatted(input->S_ip), ConvertIntToIPFormatted(input->D_ip));
