@@ -2,7 +2,7 @@
 #include <time.h>
 #include "fileIO.h"
 #include "core.h"
-
+#include "config.h"
 
 // Time clock
 clock_t startReadRule, endReadRule;
@@ -54,8 +54,8 @@ int main(int argc, char *argv[])
 
 	printf("=================\n");
 	printf("TIME (in cpu clock):\n");
-	printf("Read rule: %d\n", endReadRule - startReadRule);
-	printf("Match data: %d\n", endMatch - startMatch);
+	printf("Read rule: %ld\n", (int)endReadRule - startReadRule);
+	printf("Match data: %ld\n", (int)endMatch - startMatch);
 
 
 	return 0;

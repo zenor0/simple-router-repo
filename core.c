@@ -34,7 +34,6 @@ unsigned int ConvertIPToInt(char ip[])
 	return resultIP;
 }
 
-
 char *ConvertIntToIPFormatted(unsigned int ip)
 {
 	// Convert the decimal IP
@@ -76,7 +75,6 @@ bool IsUnsignedIntInRange(unsigned int input, RANGE *range)
 	
 	return false;
 }
-
 
 int MatchRule(DATA *input, RULEList rList)
 {

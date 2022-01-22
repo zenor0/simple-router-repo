@@ -18,7 +18,7 @@ int ReadRule(char *filename, RULEList *list)
 
 	if (fp == NULL)
 	{
-		printf("ERROR when read rule file..\n");
+		printf("ERROR: failure in opening rule.\n");
 		return FILE_OPEN_ERR;
 	}
 
@@ -90,7 +90,17 @@ int ReadData(char *filename);
 int MatchAndWrite(char *datafile, char* resultfile, RULEList *rList)
 {
 	FILE *dataFp = fopen(datafile, "r");
+	if (dataFp == NULL)
+	{
+		printf("ERROR: failure in opening data.\n");
+		return FILE_OPEN_ERR;
+	}
 	FILE *resultFp = fopen(resultfile, "a");
+	if (resultFp == NULL)
+	{
+		printf("ERROR: failure in opening result.\n");
+		return FILE_OPEN_ERR;
+	}
 
 	DATA new;
 	int result;
