@@ -25,8 +25,8 @@ int ReadRule(char *filename, RULEList *list)
 	// Create a new node, and variables to store IP (string)
 	RULENode *new;
 	RULENode *scan = *list;
-	char endIP[30];
-	char startIP[30];
+	char sourceIP[30];
+	char destinationIP[30];
 	int readCount = 0;
 	while (1)
 	{
@@ -43,8 +43,8 @@ int ReadRule(char *filename, RULEList *list)
 
 		// Check if read the rule correctly
 		// Read in by SourceIP/bit, DestinationIP/bit, (SourcePort) strat : end, (DestinationPort) start:end, (ProtocolNum) from:to
-		if (fscanf(fp, "@%[^/]/%*u\t%[^/]/%*u\t%u : %u\t%u : %u\t%x/%x\n"	, startIP, endIP, &new->item.S_portStart, &new->item.S_portEnd
-																	, &new->item.D_portStart, &new->item.D_portEnd, &new->item.protoStart, &new->item.protoEnd) != 8)
+		if (fscanf(fp, "@%[^/]/%*u\t%[^/]/%*u\t%u : %u\t%u : %u\t%x/%x\n"	, sourceIP, destinationIP, &new->item.S_port.start, &new->item.S_port.end
+																	, &new->item.D_port.start, &new->item.D_port.end, &new->item.proto.start, &new->item.proto.end) != 8)
 		{
 			printf("encouter file end or file format error\n");
 			break;
@@ -52,12 +52,13 @@ int ReadRule(char *filename, RULEList *list)
 		}
 		else
 		{
+			new->item.id = readCount;
 			readCount++;
 		}
 
 		// Translate IP string to IP decimal
-		new->item.ipStart = ConvertIPToInt(startIP);
-		new->item.ipEnd = ConvertIPToInt(endIP);
+		new->item.S_ip = ConvertIPToInt(sourceIP);
+		new->item.D_ip = ConvertIPToInt(destinationIP);
 
 		// Append rule Node to Rule list
 		new->next = NULL;
@@ -82,4 +83,24 @@ int ReadRule(char *filename, RULEList *list)
 }
 int ReadData(char *filename);
 
-int AppendResult(FILE *fp, int result);
+int MatchAndWrite(char *datafile, char* resultfile, RULEList *rList)
+{
+	FILE *dataFp = fopen(datafile, "r");
+	FILE *resultFp = fopen(resultfile, "a");
+
+	DATA new;
+	int result;
+	while (fscanf(dataFp, "%u %u %u %u %u\n", &new.S_ip, &new.D_ip, &new.S_port, &new.D_port, &new.proto) == 5)
+	{
+		result = MatchRule(&new, *rList);
+		AppendResult(resultFp, result);
+	}
+
+	return 0;
+}
+
+int AppendResult(FILE *fp, int result)
+{
+	fprintf(fp, "%d\n", result);
+	return 0;
+}
