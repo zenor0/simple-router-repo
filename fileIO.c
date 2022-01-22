@@ -103,7 +103,15 @@ int MatchAndWrite(char *datafile, char* resultfile, RULEList *rList)
 		printf("ERROR: failure in opening data.\n");
 		return FILE_OPEN_ERR;
 	}
-	FILE *resultFp = fopen(resultfile, "a");
+	FILE *resultFp;
+	if (DEBUGGING_MODE)
+	{
+		resultFp = fopen(resultfile, "a");
+	}
+	else
+	{
+		resultFp = fopen(resultfile, "w");
+	}
 	if (resultFp == NULL)
 	{
 		printf("ERROR: failure in opening result.\n");
