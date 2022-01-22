@@ -2,6 +2,7 @@
 
 int ReadRule(char *filename, RULEList *list)
 {
+	printf("INFO: Start to read rule. \n");
 	// Open the rule file
 	// If in debugging mode, then read the sepcial file (gdb running in another floder)
 
@@ -50,7 +51,7 @@ int ReadRule(char *filename, RULEList *list)
 		{
 			if (DEBUGGING_MODE)
 			{
-				printf("DEBUG: Encouter EOF or Wrong file format.\n");
+				printf("DEBUG: END reading rule file. Encouter EOF or Wrong file format.\n");
 			}
 			break;
 			//return READ_DONE_EOF;
@@ -93,6 +94,9 @@ int ReadData(char *filename);
 
 int MatchAndWrite(char *datafile, char* resultfile, RULEList *rList)
 {
+	printf("INFO: Start to match. \n");
+
+
 	FILE *dataFp = fopen(datafile, "r");
 	if (dataFp == NULL)
 	{
@@ -108,22 +112,63 @@ int MatchAndWrite(char *datafile, char* resultfile, RULEList *rList)
 
 	DATA new;
 	int readDataCount = 0;
+	int badDataCount = 0;
 	int result;
-	while (fscanf(dataFp, "%u %u %u %u %u\n", &new.S_ip, &new.D_ip, &new.S_port, &new.D_port, &new.proto) == 5)
-	{
-		result = MatchRule(&new, *rList);
-		AppendResult(resultFp, result);
 
-		readDataCount++;
-		if (DEBUGGING_MODE)
+	while (1)
+	{
+		// Check if reach the limit
+		if (!(readDataCount < MAX_DATA))
 		{
+			printf("INFO: Up to software limit.\n");
+			break;
+			//return READ_ENCOUNTER_MAX;
+		}
+
+		// Check if read the data correctly
+		if (fscanf(dataFp, "%u %u %u %u %u\n", &new.S_ip, &new.D_ip, &new.S_port, &new.D_port, &new.proto) != 5)
+		{
+			if (DEBUGGING_MODE)
+			{
+				printf("DEBUG: END reading data file. Encouter EOF or Wrong file format.\n");
+			}
+			break;
+			//return READ_DONE_EOF;
+		}
+		else
+		{
+			result = MatchRule(&new, *rList);
+			AppendResult(resultFp, result);
+
+			readDataCount++;
 			if (result == -1)
 			{
-				printf("\nDataline: %d\n", readDataCount);
-				printf("-------------------------------");
+				badDataCount++;
+				if (DEBUGGING_MODE)
+				{
+					printf("\nDataline: %d\n", readDataCount);
+					printf("-------------------------------");
+				}
 			}
 		}
 	}
+
+	printf("INFO: Read %d data in total, matched %d/%d\n", readDataCount, readDataCount - badDataCount, readDataCount);
+	// while (fscanf(dataFp, "%u %u %u %u %u\n", &new.S_ip, &new.D_ip, &new.S_port, &new.D_port, &new.proto) == 5)
+	// {
+	// 	result = MatchRule(&new, *rList);
+	// 	AppendResult(resultFp, result);
+
+	// 	readDataCount++;
+	// 	if (DEBUGGING_MODE)
+	// 	{
+	// 		if (result == -1)
+	// 		{
+	// 			printf("\nDataline: %d\n", readDataCount);
+	// 			printf("-------------------------------");
+	// 		}
+	// 	}
+	// }
 
 	return 0;
 }
