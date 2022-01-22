@@ -35,6 +35,7 @@ unsigned int ConvertIPToInt(char ip[])
 }
 
 
+// Untested
 char *CovertIntToIPFormatted(int ip)
 {
 	// Convert the decimal IP
@@ -50,8 +51,9 @@ char *CovertIntToIPFormatted(int ip)
 	}
 
 	// Write to a string
+	// Remember to reverse
 	char *result = (char *)malloc(sizeof(char) * 13);
-	sprintf(result, "%d.%d.%d.%d", ipDecimal[0], ipDecimal[1], ipDecimal[2], ipDecimal[3]);
+	sprintf(result, "%d.%d.%d.%d", ipDecimal[3], ipDecimal[2], ipDecimal[1], ipDecimal[0]);
 
 
 	return result;

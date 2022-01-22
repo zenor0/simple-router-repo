@@ -3,7 +3,7 @@
 int ReadRule(char *filename, RULEList *list)
 {
 	// Open the rule file
-	// If in debugging mode, then read the sepcial file
+	// If in debugging mode, then read the sepcial file (gdb running in another floder)
 
 	FILE *fp;
 	if (DEBUGGING_MODE)

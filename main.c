@@ -15,11 +15,5 @@ int main(int argc, char *argv[])
 	RULEList rList = NULL;
 	ReadRule(argv[1], &rList);
 
-	for (int i = 0; i < 10; i++)
-	{
-		printf("%u\n", rList->item.ipStart);
-		rList = rList->next;
-	}
-
 	return 0;
 }
