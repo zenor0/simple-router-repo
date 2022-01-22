@@ -23,11 +23,11 @@
 #define CONFIG____
 
 #define PROGRAM_NAME "simple-router"
-#define DEBUG_RULE_DIR "D:\\Projects\\Codes\\programming-daily\\C\\simple-router\\build\\debug-rule"
-#define DEBUG_DATA_DIR "D:\\Projects\\Codes\\programming-daily\\C\\simple-router\\build\\debug-data"
+#define DEBUG_RULE_DIR "debug-rule"
+#define DEBUG_DATA_DIR "debug-data"
 #define RESULTFILE_NAME "ans"
 #define MAX_RULE 1000
 #define MAX_DATA 1000
-#define DEBUGGING_MODE 1
+#define DEBUGGING_MODE 0
 
 #endif
