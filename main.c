@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
 
 	if (DEBUGGING_MODE)
 	{
-		printf("DEBUG: Overwrite dataset to the specific file.");
+		printf("DEBUG: Overwrite dataset to specific file.\n");
 		argv[2] = DEBUG_DATA_DIR;
 	}
 
@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
 		RULEList temp = rList;
 		while (temp != NULL)
 		{
-			printf("RULE %d || Source IP: %u\tDestination IP: %u\n", temp->item.id, temp->item.S_ip, temp->item.D_ip);
+			printf("RULE %d || Source IP: %u\tDestination IP: %u\n", temp->item.id, temp->item.S_ip.start, temp->item.D_ip.start);
 			temp = temp->next;
 		}
 	}

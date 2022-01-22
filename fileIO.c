@@ -28,6 +28,7 @@ int ReadRule(char *filename, RULEList *list)
 	RULENode *scan = *list;
 	char sourceIP[30];
 	char destinationIP[30];
+	int sourceIPMask, destinationIPMask;
 	int readCount = 0;
 	while (1)
 	{
@@ -44,8 +45,8 @@ int ReadRule(char *filename, RULEList *list)
 
 		// Check if read the rule correctly
 		// Read in by SourceIP/bit, DestinationIP/bit, (SourcePort) strat : end, (DestinationPort) start:end, (ProtocolNum) from:to
-		if (fscanf(fp, "@%[^/]/%*u\t%[^/]/%*u\t%u : %u\t%u : %u\t%x/%x\n"	, sourceIP, destinationIP, &new->item.S_port.start, &new->item.S_port.end
-																	, &new->item.D_port.start, &new->item.D_port.end, &new->item.proto.start, &new->item.proto.end) != 8)
+		if (fscanf(fp, "@%[^/]/%d\t%[^/]/%d\t%u : %u\t%u : %u\t%x/%x\n"	, sourceIP, &sourceIPMask, destinationIP, &destinationIPMask, &new->item.S_port.start, &new->item.S_port.end
+																	, &new->item.D_port.start, &new->item.D_port.end, &new->item.proto.start, &new->item.proto.end) != 10)
 		{
 			if (DEBUGGING_MODE)
 			{
@@ -61,8 +62,11 @@ int ReadRule(char *filename, RULEList *list)
 		}
 
 		// Translate IP string to IP decimal
-		new->item.S_ip = ConvertIPToInt(sourceIP);
-		new->item.D_ip = ConvertIPToInt(destinationIP);
+		// new->item.S_ip = ConvertIPToInt(sourceIP);
+		// new->item.D_ip = ConvertIPToInt(destinationIP);
+
+		new->item.S_ip = ApplyMaskOnIpOutputRange(ConvertIPToInt(sourceIP), sourceIPMask);
+		new->item.D_ip = ApplyMaskOnIpOutputRange(ConvertIPToInt(destinationIP), destinationIPMask);
 
 		// Append rule Node to Rule list
 		new->next = NULL;
@@ -103,11 +107,22 @@ int MatchAndWrite(char *datafile, char* resultfile, RULEList *rList)
 	}
 
 	DATA new;
+	int readDataCount = 0;
 	int result;
 	while (fscanf(dataFp, "%u %u %u %u %u\n", &new.S_ip, &new.D_ip, &new.S_port, &new.D_port, &new.proto) == 5)
 	{
 		result = MatchRule(&new, *rList);
 		AppendResult(resultFp, result);
+
+		readDataCount++;
+		if (DEBUGGING_MODE)
+		{
+			if (result == -1)
+			{
+				printf("\nDataline: %d\n", readDataCount);
+				printf("-------------------------------");
+			}
+		}
 	}
 
 	return 0;

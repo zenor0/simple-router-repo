@@ -59,21 +59,27 @@ char *ConvertIntToIPFormatted(unsigned int ip)
 
 bool IsUnsignedIntInRange(unsigned int input, RANGE *range)
 {
-	//printf("cmp function called\n");
-	// 0x00/0x00 means MATCHING all the protocols
-	if (input >= range->start && input <= range->end)
+	return (input >= range->start && input <= range->end) ? true : false;
+}
+
+bool IsProtocolInRange(unsigned int input, RANGE *range)
+{
+	// [del] 0x00/0x00 means MATCHING all the protocols
+
+	// [update] ?/0x00 means MATCHING all the protocols
+
+
+	if (range->end == 0xFF)
+	{
+		return input == range->start ? true : false;
+	}
+
+	if (range->end == 0x00)
 	{
 		return true;
 	}
-	else
-	{
-		if (range->start == 0 && range->end == 0)
-		{
-			return true;
-		}
-	}
-	
-	return false;
+
+	return (input >= range->start && input <= range->end) ? true : false;
 }
 
 int MatchRule(DATA *input, RULEList rList)
@@ -81,12 +87,13 @@ int MatchRule(DATA *input, RULEList rList)
 	// Go through the liken list
 
 	int result = -1;
-	while (rList->next != NULL)
+	while (rList != NULL)
 	{
-		if (input->D_ip == rList->item.D_ip && input->S_ip == rList->item.S_ip
+		if (IsUnsignedIntInRange(input->D_ip, &(rList->item.D_ip))
+		 && IsUnsignedIntInRange(input->S_ip, &(rList->item.S_ip))
 		 && IsUnsignedIntInRange(input->S_port, &(rList->item.S_port))
 		 && IsUnsignedIntInRange(input->D_port, &(rList->item.D_port))
-		 && IsUnsignedIntInRange(input->proto, &(rList->item.proto))	)
+		 && IsProtocolInRange(input->proto, &(rList->item.proto))	)
 		{
 			result = rList->item.id;
 			break;
@@ -99,21 +106,44 @@ int MatchRule(DATA *input, RULEList rList)
 	{
 		if (result == -1)
 		{
+			printf("-------------------------------\n");
 			printf("DEBUG: NOT MATCH!\n");
 			printf("INPUT:\n");
 			printf("(DEC)Source IP = %u\tDestination IP = %u\n", input->S_ip, input->D_ip);
 			printf("(STR)Source IP = %s\tDestination IP = %s\n", ConvertIntToIPFormatted(input->S_ip), ConvertIntToIPFormatted(input->D_ip));
-			// printf("COMPARE STATUS: \n");
-			// printf("Source ip: %u\tDestination IP: %u\n", input->S_ip == rList->item.S_ip, input->D_ip == rList->item.D_ip);
-			// printf("Source Port in range: %d\n", IsUnsignedIntInRange(input->S_port, &(rList->item.S_port)));
-			// printf("Destination Port in range: %d\n", IsUnsignedIntInRange(input->D_port, &(rList->item.D_port)));
-			// printf("Protocol Port in range: %d\n", IsUnsignedIntInRange(input->proto, &(rList->item.proto)));
+			printf("COMPARE STATUS: \n");
+			printf("Source ip: %u\tDestination IP: %u\n", IsUnsignedIntInRange(input->D_ip, &(rList->item.D_ip)), IsUnsignedIntInRange(input->S_ip, &(rList->item.S_ip)));
+			printf("Source Port in range: %d\n", IsUnsignedIntInRange(input->S_port, &(rList->item.S_port)));
+			printf("Destination Port in range: %d\n", IsUnsignedIntInRange(input->D_port, &(rList->item.D_port)));
+			printf("Protocol Port in range: %d\n", IsProtocolInRange(input->proto, &(rList->item.proto)));
 		}
 		else
 		{
 			printf("MATCH! RuleID: %d\n", result);
 		}
 	}
+
+	return result;
+}
+
+RANGE ApplyMaskOnIpOutputRange(unsigned int ip, int maskBit)
+{
+	RANGE result;
+
+	// Generate a int32 full 1 mask (i.e. 11111111 11111111 11111111 11111111)
+	// Right shift make => (maskbit) + 11..111
+	unsigned mask = -1;
+	if (maskBit != 32)
+	{
+		mask >>= maskBit;
+	}
+	else
+	{
+		mask = 0;
+	}
+
+	result.start = ip & ~mask;
+	result.end = ip | mask;
 
 	return result;
 }

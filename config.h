@@ -28,6 +28,6 @@
 #define RESULTFILE_NAME "ans"
 #define MAX_RULE 1000
 #define MAX_DATA 1000
-#define DEBUGGING_MODE 0
+#define DEBUGGING_MODE 1
 
 #endif

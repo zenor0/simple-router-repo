@@ -30,8 +30,8 @@ typedef struct
 	// unsigned int protoStart;
 	// unsigned int protoEnd;
 
-	unsigned int D_ip;
-	unsigned int S_ip;
+	RANGE D_ip;
+	RANGE S_ip;
 	RANGE D_port;
 	RANGE S_port;
 	RANGE proto;
@@ -68,8 +68,9 @@ typedef struct
 unsigned int ConvertIPToInt(char ip[]);
 char *ConvertIntToIPFormatted(unsigned int ip);
 
-// Input a DATA* (i.e. a pointer of DATA). in order to save memory and improve efficency
+// Input a DATA* (i.e. a pointer of DATA). in order to save memory and improve program speed
 // No need to read rList so, not pass through a pointer
 int MatchRule(DATA *input, RULEList rList);
+RANGE ApplyMaskOnIpOutputRange(unsigned int ip, int maskBit);
 
 #endif
