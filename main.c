@@ -57,6 +57,7 @@ int main(int argc, char *argv[])
 	printf("Read rule: %ld\n", (int)endReadRule - startReadRule);
 	printf("Match data: %ld\n", (int)endMatch - startMatch);
 
+	FreeRuleList(&rList);
 
 	return 0;
 }

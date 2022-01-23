@@ -64,11 +64,6 @@ bool IsUnsignedIntInRange(unsigned int input, RANGE *range)
 
 bool IsProtocolInRange(unsigned int input, RANGE *range)
 {
-	// [del] 0x00/0x00 means MATCHING all the protocols
-
-	// [update] ?/0x00 means MATCHING all the protocols
-
-
 	if (range->end == 0xFF)
 	{
 		return input == range->start ? true : false;
@@ -146,4 +141,16 @@ RANGE ApplyMaskOnIpOutputRange(unsigned int ip, int maskBit)
 	result.end = ip | mask;
 
 	return result;
+}
+
+int FreeRuleList(RULEList *rList)
+{
+	RULENode *nextNode;
+	while (*rList != NULL)
+	{
+		nextNode = (*rList)->next;
+		free(*rList);
+		*rList = nextNode;
+	}
+	return 0;
 }
