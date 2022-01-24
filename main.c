@@ -10,7 +10,7 @@ clock_t startMatch, endMatch;
 
 int main(int argc, char *argv[])
 {
-	// Check arguments count
+	// Check arguments
 	if (argc != 3 && !DEBUGGING_MODE)
 	{
 		printf("Usage. %s <rule> <dataset>\n", PROGRAM_NAME);
@@ -24,7 +24,8 @@ int main(int argc, char *argv[])
 	}
 
 	startReadRule = clock();
-	// Open rule file
+
+	// Initialize RULEList & Open rule file
 	RULEList rList = NULL;
 	ReadRule(argv[1], &rList);
 
@@ -43,8 +44,8 @@ int main(int argc, char *argv[])
 	}
 
 	// Open data file
-	// Go through the rule liken list 
-	// Match the rule, return the result
+	// Go through the rule linked list 
+	// Match the rules, return the results
 
 	startMatch = clock();
 

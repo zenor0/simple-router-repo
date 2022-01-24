@@ -4,7 +4,7 @@ int ReadRule(char *filename, RULEList *list)
 {
 	printf("INFO: Start to read rule. \n");
 	// Open the rule file
-	// If in debugging mode, then read the sepcial file (gdb running in another floder)
+	// If in debug mode, then read the sepcial file (gdb runs in another floder)
 
 	FILE *fp;
 	if (DEBUGGING_MODE)
@@ -24,7 +24,7 @@ int ReadRule(char *filename, RULEList *list)
 	}
 
 	// Read rules line by line
-	// Create a new node, and variables to store IP (string)
+	// Create a new node, and variables to store IP (original format)
 	RULENode *new;
 	RULENode *scan = *list;
 	char sourceIP[30];
@@ -62,14 +62,11 @@ int ReadRule(char *filename, RULEList *list)
 			readCount++;
 		}
 
-		// Translate IP string to IP decimal
-		// new->item.S_ip = ConvertIPToInt(sourceIP);
-		// new->item.D_ip = ConvertIPToInt(destinationIP);
-
 		new->item.S_ip = ApplyMaskOnIpOutputRange(ConvertIPToInt(sourceIP), sourceIPMask);
 		new->item.D_ip = ApplyMaskOnIpOutputRange(ConvertIPToInt(destinationIP), destinationIPMask);
 
 		// Append rule Node to Rule list
+
 		new->next = NULL;
 		if (scan == NULL)
 		{
@@ -162,22 +159,10 @@ int MatchAndWrite(char *datafile, char* resultfile, RULEList *rList)
 	}
 
 	printf("INFO: Read %d data in total, matched %d/%d\n", readDataCount, readDataCount - badDataCount, readDataCount);
-	// while (fscanf(dataFp, "%u %u %u %u %u\n", &new.S_ip, &new.D_ip, &new.S_port, &new.D_port, &new.proto) == 5)
-	// {
-	// 	result = MatchRule(&new, *rList);
-	// 	AppendResult(resultFp, result);
 
-	// 	readDataCount++;
-	// 	if (DEBUGGING_MODE)
-	// 	{
-	// 		if (result == -1)
-	// 		{
-	// 			printf("\nDataline: %d\n", readDataCount);
-	// 			printf("-------------------------------");
-	// 		}
-	// 	}
-	// }
-
+	fclose(dataFp);
+	fclose(resultFp);
+	
 	return 0;
 }
 

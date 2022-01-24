@@ -69,7 +69,6 @@ unsigned int ConvertIPToInt(char ip[]);
 char *ConvertIntToIPFormatted(unsigned int ip);
 
 // Input a DATA* (i.e. a pointer of DATA). in order to save memory and improve program speed
-// No need to read rList so, not pass through a pointer
 int MatchRule(DATA *input, RULEList rList);
 RANGE ApplyMaskOnIpOutputRange(unsigned int ip, int maskBit);
 
