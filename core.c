@@ -139,3 +139,15 @@ RANGE ApplyMaskOnIpOutputRange(unsigned int ip, int maskBit)
 
 	return result;
 }
+
+int FreeRuleList(RULEList *rList)
+{
+	RULENode *nextNode;
+	while (*rList != NULL)
+	{
+		nextNode = (*rList)->next;
+		free(*rList);
+		*rList = nextNode;
+	}
+	return 0;
+}

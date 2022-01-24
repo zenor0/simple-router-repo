@@ -72,4 +72,6 @@ char *ConvertIntToIPFormatted(unsigned int ip);
 int MatchRule(DATA *input, RULEList rList);
 RANGE ApplyMaskOnIpOutputRange(unsigned int ip, int maskBit);
 
+int FreeRuleList(RULEList *rList);
+
 #endif

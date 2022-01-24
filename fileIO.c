@@ -87,7 +87,12 @@ int ReadRule(char *filename, RULEList *list)
 	fclose(fp);
 	return readCount;
 }
-int ReadData(char *filename);
+
+int AppendResult(FILE *fp, int result)
+{
+	fprintf(fp, "%d\n", result);
+	return 0;
+}
 
 int MatchAndWrite(char *datafile, char* resultfile, RULEList *rList)
 {
@@ -166,8 +171,3 @@ int MatchAndWrite(char *datafile, char* resultfile, RULEList *rList)
 	return 0;
 }
 
-int AppendResult(FILE *fp, int result)
-{
-	fprintf(fp, "%d\n", result);
-	return 0;
-}
