@@ -94,7 +94,7 @@ int AppendResult(FILE *fp, int result)
 	return 0;
 }
 
-int MatchAndWrite(char *datafile, char* resultfile, RULEList *rList)
+int MatchAndWrite(char *datafile, char *resultfile, RULEList *rList)
 {
 	printf("INFO: Start to match. \n");
 

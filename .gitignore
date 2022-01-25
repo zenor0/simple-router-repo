@@ -54,3 +54,7 @@ dkms.conf
 # CMake file
 
 build/
+
+# Counter Files
+
+.VSCodeCounter/
