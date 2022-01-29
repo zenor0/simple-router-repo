@@ -88,9 +88,16 @@ int ReadRule(char *filename, RULEList *list)
 	return readCount;
 }
 
-int AppendResult(FILE *fp, int result)
+int AppendResult(FILE *fp, int result, DATA *data)
 {
-	fprintf(fp, "%d\n", result);
+	if (!DEBUGGING_MODE)
+	{
+		fprintf(fp, "%u %u %u %u %u %d\n", data->S_ip, data->D_ip, data->S_port, data->D_port, data->proto, result);
+	}
+	else
+	{
+		fprintf(fp, "%d\n", result);
+	}
 	return 0;
 }
 
@@ -148,7 +155,7 @@ int MatchAndWrite(char *datafile, char *resultfile, RULEList *rList)
 		else
 		{
 			result = MatchRule(&new, *rList);
-			AppendResult(resultFp, result);
+			AppendResult(resultFp, result, &new);
 
 			readDataCount++;
 			if (result == -1)
