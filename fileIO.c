@@ -1,5 +1,9 @@
 #include "fileIO.h"
 
+// Local function
+int AppendResult(FILE *fp, int result, DATA *data);
+
+
 int ReadRule(char *filename, RULEList *list)
 {
 	printf("INFO: Start to read rule. \n");
@@ -53,17 +57,16 @@ int ReadRule(char *filename, RULEList *list)
 			{
 				printf("DEBUG: END reading rule file. Encouter EOF or Wrong file format.\n");
 			}
+
 			break;
 			//return READ_DONE_EOF;
 		}
-		else
-		{
-			new->item.id = readCount;
-			readCount++;
-		}
 
+		new->item.id = readCount;
 		new->item.S_ip = ApplyMaskOnIpOutputRange(ConvertIPToInt(sourceIP), sourceIPMask);
 		new->item.D_ip = ApplyMaskOnIpOutputRange(ConvertIPToInt(destinationIP), destinationIPMask);
+
+		readCount++;
 
 		// Append rule Node to Rule list
 
@@ -88,23 +91,9 @@ int ReadRule(char *filename, RULEList *list)
 	return readCount;
 }
 
-int AppendResult(FILE *fp, int result, DATA *data)
-{
-	if (!DEBUGGING_MODE)
-	{
-		fprintf(fp, "%u %u %u %u %u %d\n", data->S_ip, data->D_ip, data->S_port, data->D_port, data->proto, result);
-	}
-	else
-	{
-		fprintf(fp, "%d\n", result);
-	}
-	return 0;
-}
-
 int MatchAndWrite(char *datafile, char *resultfile, RULEList *rList)
 {
 	printf("INFO: Start to match. \n");
-
 
 	FILE *dataFp = fopen(datafile, "r");
 	if (dataFp == NULL)
@@ -112,6 +101,7 @@ int MatchAndWrite(char *datafile, char *resultfile, RULEList *rList)
 		printf("ERROR: failure in opening data.\n");
 		return FILE_OPEN_ERR;
 	}
+
 	FILE *resultFp;
 	if (DEBUGGING_MODE)
 	{
@@ -152,22 +142,21 @@ int MatchAndWrite(char *datafile, char *resultfile, RULEList *rList)
 			break;
 			//return READ_DONE_EOF;
 		}
-		else
-		{
-			result = MatchRule(&new, *rList);
-			AppendResult(resultFp, result, &new);
 
-			readDataCount++;
-			if (result == -1)
+		result = MatchRule(&new, *rList);
+		AppendResult(resultFp, result, &new);
+
+		readDataCount++;
+		if (result == -1)
+		{
+			badDataCount++;
+			if (DEBUGGING_MODE)
 			{
-				badDataCount++;
-				if (DEBUGGING_MODE)
-				{
-					printf("\nDataline: %d\n", readDataCount);
-					printf("-------------------------------");
-				}
+				printf("\nDataID: %d\n", readDataCount);
+				printf("-------------------------------");
 			}
 		}
+		
 	}
 
 	printf("INFO: Read %d data in total, matched %d/%d\n", readDataCount, readDataCount - badDataCount, readDataCount);
@@ -178,3 +167,15 @@ int MatchAndWrite(char *datafile, char *resultfile, RULEList *rList)
 	return 0;
 }
 
+int AppendResult(FILE *fp, int result, DATA *data)
+{
+	if (!DEBUGGING_MODE)
+	{
+		fprintf(fp, "%u %u %u %u %u %d\n", data->S_ip, data->D_ip, data->S_port, data->D_port, data->proto, result);
+	}
+	else
+	{
+		fprintf(fp, "%d\n", result);
+	}
+	return 0;
+}
