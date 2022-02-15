@@ -1,7 +1,10 @@
 #include <iostream>
+#include <fstream>
 #include <ctime>
 #include "router.h"
 #include "cmdline.h"
+
+void ParserCommand(int argc, char* argv[]);
 
 using std::cout, std::endl;
 using std::string;
@@ -10,6 +13,43 @@ bool isDebug;
 cmdline::parser cmdParser;
 
 int main(int argc, char* argv[])
+{
+	ParserCommand(argc, argv);
+	
+	// Router should receive following parameters
+		// ruleFile
+		// dataFile
+		// algorithmName
+
+	base_router router;
+
+	// If benchmark mode on
+		// Parse the list file.
+
+	// Initialize router
+		// Build the router tree
+	
+
+	// Read the dataset
+
+	// Destroy the router properly
+
+
+	// Show the info & Exit program
+	if (cmdParser.exist("info") || cmdParser.exist("debug"))
+	{
+		cout << "INFO || Exiting the router, show info now..." << "\n"
+			 << "Time: " << router.time() << "\n"
+			 << "Memory: " << router.memory() << "\n"
+			 ;
+			
+		cout << endl;
+	}
+	return 0;
+}
+
+
+void ParserCommand(int argc, char* argv[])
 {
 	// Define command arguments
 	cmdParser.add<string>("benchmark", 'b', "Benchmark Mode\t - run router as the assigned <list file>.", false, "list.dat");
@@ -43,29 +83,4 @@ int main(int argc, char* argv[])
 			cout << "---------------------";
 			cout << endl;
 	}
-
-	base_router router;
-	// If benchmark mode on
-		// Parse the list file.
-
-	// Initialize router
-		// Build the router tree
-	
-
-	// Read the dataset
-
-	// Destroy the router properly
-
-
-	// Show the info & Exit program
-	if (cmdParser.exist("info") || cmdParser.exist("debug"))
-	{
-		cout << "INFO || Exiting the router, now showing the info" << "\n"
-			 << "Time: " << router.time() << "\n"
-			 << "Memory: " << router.memory() << "\n"
-			 ;
-			
-		cout << endl;
-	}
-	return 0;
 }

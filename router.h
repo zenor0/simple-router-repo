@@ -12,42 +12,40 @@ using std::cin, std::cout, std::endl;
 #ifndef CORESTR___
 #define CORESTR___
 
-typedef struct 
+struct RANGE
 {
 	unsigned int start;
 	unsigned int end;
-} RANGE;
+};
+
+class IPRANGE
+{
+public:
+	unsigned int start;
+	unsigned int end;
+
+	IPRANGE &ApplyMask(unsigned int ip, int maskBit);
+};
 
 
 // Rule structures
 
-typedef struct
+class RULEItem
 {
+public:
 	unsigned int classID;
-
-	RANGE sourIP;
-	RANGE destIP;
+	IPRANGE sourIP;
+	IPRANGE destIP;
 	RANGE sourPort;
 	RANGE destPort;
 	RANGE proto;
 
-} RULEItem;
-
-typedef struct RnodeNaive
-{
-	RULEItem item;
-	struct RnodeNaive *next;
-} RULENode;
-
-// typedef struct RnodeHicuts
-// {
-
-// };
-
+	RULEItem &ReadRule(string rawRuleString);
+};
 
 // Data structures
 
-typedef struct
+struct DATAItem
 {
 	unsigned int sourIP;
 	unsigned int destIP;
@@ -55,12 +53,20 @@ typedef struct
 	unsigned int destPort;
 	unsigned int proto;
 
-} DATA;
+};
 
 #endif
 
 #ifndef CORECLA___
 #define CORECLA___
+
+enum ALGORITHM_SIGNS
+{
+	naive		= 1 << 0,
+	hicuts		= 1 << 1,
+	hypercuts	= 1 << 2,
+};
+
 
 class base_router
 {
@@ -69,12 +75,22 @@ public:
 
 	// TO-DO
 	int Init();
-	int BuildTree();
+	int BuildTree(string ruleFileName);
 		// Naive algorithm
 
 		// Hicuts
 
 		// Hypercuts
+	int Match(string dataFile);
+
+
+	typedef struct RnodeNaive
+	{
+		RULEItem item;
+		struct RnodeNaive *next;
+	} RULENode;
+
+
 	double time() {return (1.0 * matchEndTime - matchStartTime) / CLOCKS_PER_SEC;};
 	double memory() {return ruleCount * sizeof(RULENode);};
 
@@ -91,9 +107,17 @@ protected:
 
 };
 
+// Hicuts
 class hicuts_router : public base_router
 {
 public:
+	typedef struct RboxHicuts
+	{
+		RULEItem item;
+		struct RboxHicuts *next;
+
+	} RULENode;
+
 
 private:
 	unsigned int binth;
