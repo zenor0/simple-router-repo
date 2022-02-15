@@ -3,6 +3,7 @@
 #include "cmdline.h"
 
 extern bool isDebug;
+extern cmdline::parser cmdParser;
 
 using std::string;
 using std::cin, std::cout, std::endl;
@@ -22,12 +23,12 @@ typedef struct
 
 typedef struct
 {
-	unsigned int id;
+	unsigned int classID;
 
-	RANGE D_ip;
-	RANGE S_ip;
-	RANGE D_port;
-	RANGE S_port;
+	RANGE sourIP;
+	RANGE destIP;
+	RANGE sourPort;
+	RANGE destPort;
 	RANGE proto;
 
 } RULEItem;
@@ -35,7 +36,7 @@ typedef struct
 typedef struct RnodeNaive
 {
 	RULEItem item;
-	struct Rnode *next;
+	struct RnodeNaive *next;
 } RULENode;
 
 // typedef struct RnodeHicuts
@@ -48,25 +49,23 @@ typedef struct RnodeNaive
 
 typedef struct
 {
-	unsigned int S_ip;
-	unsigned int D_ip;
-	unsigned int S_port;
-	unsigned int D_port;
+	unsigned int sourIP;
+	unsigned int destIP;
+	unsigned int sourPort;
+	unsigned int destPort;
 	unsigned int proto;
-	
+
 } DATA;
 
 #endif
 
-
-
 #ifndef CORECLA___
 #define CORECLA___
 
-class router
+class base_router
 {
 public:
-	router() = default;
+	base_router() = default;
 
 	// TO-DO
 	int Init();
@@ -76,14 +75,34 @@ public:
 		// Hicuts
 
 		// Hypercuts
-
-
-
+	double time() {return (1.0 * matchEndTime - matchStartTime) / CLOCKS_PER_SEC;};
+	double memory() {return ruleCount * sizeof(RULENode);};
 
 private:
 	RULENode *rootNode = NULL;
 	unsigned int ruleCount = 0;
+	unsigned int matchStartTime = 0;
+	unsigned int matchEndTime = 0;
+
+	unsigned int ConvertIPToInt(string ip);
+
+protected:
+
 
 };
+
+class hicuts_router : public base_router
+{
+public:
+
+private:
+	unsigned int binth;
+	
+protected:
+
+
+
+};
+
 
 #endif
