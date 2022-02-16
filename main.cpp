@@ -75,7 +75,7 @@ void ParserCommand(int argc, char* argv[])
 			 << "Debug status: \t\t" << cmdParser.exist("debug") << "\n"
 
 			 << "---------------------" << "\n"
-			 << "Rest arguments:"
+			 << "Rest arguments:" << "\n"
 			 ;
 
 			for (auto i : cmdParser.rest())

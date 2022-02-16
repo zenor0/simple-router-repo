@@ -8,7 +8,9 @@ using std::getline;
 
 int base_router::Init()
 {
-	outputStream.open(outputFileName, std::ostream::out | std::ostream::trunc);
+	outputStream.open(outputFileName);
+
+	// outputStream.open(outputFileName, std::ostream::out | std::ostream::trunc);
 
 	cout << "This is a defination of initialization function" << endl;
 	return 0;
@@ -54,14 +56,15 @@ int base_router::BuildTree(void)
 	// TO-DO
 	// if there is a tree, then delete it.
 
-	RULENode *scanPtr = rootNode->next;
+	RULENode *scanPtr = rootNode;
+	RULENode *newNode;
 
 	std::string scanStr;
 	std::ifstream ruleStream(ruleFileName, std::ifstream::in);
 
 	while (getline(ruleStream, scanStr, '\n'))
 	{
-		RULENode *newNode = new RULENode;
+		newNode = new RULENode;
 		newNode->item.read(scanStr);
 		newNode->item.classID = ruleCount++;
 		newNode->next = nullptr;
@@ -80,9 +83,7 @@ int base_router::BuildTree(void)
 		// check if success
 
 		// catch some rule file errors
-
 	}
-
 
 	return 0;
 }
@@ -136,6 +137,7 @@ bool base_router::LinearSearch(DATAItem &packet)
 
 int base_router::Match(void)
 {
+	cout << dataFileName << endl;
 	std::ifstream dataFileStream(dataFileName, std::ifstream::in);
 	std::string scanStr;
 	DATAItem scanData;
@@ -148,11 +150,12 @@ int base_router::Match(void)
 
 	matchStartTime = clock();
 
+
 	while (getline(dataFileStream, scanStr, '\n'))
 	{
 		// Read in a packet
 		tempData.read(scanStr);
-
+		
 		// Traverse the list, match rules.
 		while (scanPtr->next != nullptr)
 		{
@@ -170,7 +173,7 @@ int base_router::Match(void)
 			{
 				tempData.print(outputStream);
 			}
-
+			
 			// TO-DO
 			// Catch some errors
 			scanPtr = scanPtr->next;

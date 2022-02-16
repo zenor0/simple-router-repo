@@ -94,7 +94,7 @@ public:
 	} RULENode;
 
 	base_router() = default;
-	base_router(string rule, string data) : base_router(rule, data, outputFileName) {};
+	base_router(string rule, string data) {base_router(rule, data, "ans.txt");};
 	base_router(string rule, string data, string output) : ruleFileName(rule), dataFileName(data), outputFileName(output) {};
 
 	// TO-DO
@@ -104,13 +104,13 @@ public:
 
 	int add(RULENode &newNode);
 	double time() {return (1.0 * matchEndTime - matchStartTime) / CLOCKS_PER_SEC;};
-	double memory() {return ruleCount * sizeof(RULENode);};
+	double memory() {return ruleCount;};
 
 private:
 	RULENode *rootNode = nullptr;
 
 	string ruleFileName = "rule.txt";
-	string dataFileName = "packet.txt";
+	string dataFileName = "packet1.txt";
 	string outputFileName = "ans.txt";
 
 	std::ofstream outputStream;
