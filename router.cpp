@@ -137,8 +137,7 @@ bool base_router::LinearSearch(DATAItem &packet)
 
 int base_router::Match(void)
 {
-	cout << dataFileName << endl;
-	std::ifstream dataFileStream(dataFileName, std::ifstream::in);
+	std::ifstream dataStream(dataFileName, std::ifstream::in);
 	std::string scanStr;
 	DATAItem scanData;
 
@@ -151,7 +150,7 @@ int base_router::Match(void)
 	matchStartTime = clock();
 
 
-	while (getline(dataFileStream, scanStr, '\n'))
+	while (getline(dataStream, scanStr, '\n'))
 	{
 		// Read in a packet
 		tempData.read(scanStr);
