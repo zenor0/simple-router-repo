@@ -29,6 +29,9 @@ int main(int argc, char* argv[])
 	// Initialize router
 		// Build the router tree
 	
+	router.Init();
+	router.BuildTree();
+	router.Match();
 
 	// Read the dataset
 
