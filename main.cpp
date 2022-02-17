@@ -4,12 +4,15 @@
 #include "router.h"
 #include "cmdline.h"
 
+
+
 void ParserCommand(int argc, char* argv[]);
 
 using std::cout, std::endl;
 using std::string;
 
-bool isDebug;
+bool DEBUG_STATUS = false;
+bool INFO_STATUS = false;
 cmdline::parser cmdParser;
 
 int main(int argc, char* argv[])
@@ -25,11 +28,12 @@ int main(int argc, char* argv[])
 
 	// If benchmark mode on
 		// Parse the list file.
+		// Updata outputfile name every time read a file.
 
 	// Initialize router
 		// Build the router tree
 	
-	router.Init();
+	router.Init(cmdParser.rest()[0], cmdParser.rest()[1], cmdParser.rest()[2]);
 	router.BuildTree();
 	router.Match();
 
@@ -41,9 +45,12 @@ int main(int argc, char* argv[])
 	// Show the info & Exit program
 	if (cmdParser.exist("info") || cmdParser.exist("debug"))
 	{
+		cout.precision(3);
 		cout << "INFO || Exiting the router, show info now..." << "\n"
+			 << "---------------------" << "\n"
 			 << "Time: " << router.time() << "\n"
-			 << "Memory: " << router.memory() << "\n"
+			 << "Rule: " << router.rulenum() << "\n"
+			 << "Memory: " << router.memory() / 1000.0 << "KB" << "\n"
 			 ;
 			
 		cout << endl;
@@ -55,19 +62,24 @@ int main(int argc, char* argv[])
 void ParserCommand(int argc, char* argv[])
 {
 	// Define command arguments
+	cmdParser.add<string>("open", 'o', "Output File\t - assign an output file <list file> (overwrite existed file).", false, "ans");
 	cmdParser.add<string>("benchmark", 'b', "Benchmark Mode\t - run router as the assigned <list file>.", false, "list.dat");
 	cmdParser.add("debug", 'd', "Debug Mode\t\t - run router in debug mode.");
 	cmdParser.add("info", 'i', "Show info\t\t - show info, including time and memory info.");
 	cmdParser.footer("<rule file> <data file>");
 
 	cmdParser.parse_check(argc, argv);
-	
-	// Write to a global variable
-	// May UNuseless?? consider del it!
-	isDebug = cmdParser.exist("debug") ? true : false;
+
+
+	INFO_STATUS = cmdParser.exist("info") ? true : false;
+	if (cmdParser.exist("debug"))
+	{
+		DEBUG_STATUS = true;
+		INFO_STATUS = true;
+	}
 
 	// Arguments debug info
-	if (isDebug)
+	if (DEBUG_STATUS)
 	{
 		cout << "DEBUG || Received arguments\n"
 			 << "Benchmark status: \t" << cmdParser.exist("benchmark") << "\n"

@@ -6,6 +6,20 @@
 // Close streams
 using std::getline;
 
+// Logging functions
+
+std::ostream &InfoPrint(std::ostream &os, string str)
+{
+	os << "INFO || " << str << endl;
+	return os;
+}
+
+std::ostream &DebugPrint(std::ostream &os, string str)
+{
+	os << "DEBUG || " << str << endl;
+	return os;
+}
+
 RULEItem &RULEItem::read(string rawRuleString)
 {
 	// sample rule:
@@ -41,6 +55,20 @@ RULEItem &RULEItem::read(string rawRuleString)
 	return *this;
 }
 
+std::ostream &RULEItem::print(std::ostream &os)
+{
+	os << "DATA INFO || "
+	   << "Source: " << sourIP.start << "-" << sourIP.end << "\n"
+	   << "Destination: " << destIP.start << "-" << destIP.end << "\n"
+	   << "Source Port: " << sourPort.start << "-" << sourPort.end << "\n"
+	   << "Destination Port: " << sourPort.start << "-" << sourPort.end << "\n"
+	   << "Protocol: " << proto.start << "-" << proto.end << "\n"
+	   << endl;
+
+
+	return os;
+}
+
 DATAItem &DATAItem::read(string rawDataString)
 {
 	// Sample data
@@ -49,26 +77,35 @@ DATAItem &DATAItem::read(string rawDataString)
 	std::istringstream dataStream(rawDataString);
 
 	dataStream >> sourIP >> destIP >> sourPort >> destPort >> proto;
-	
+
 	return *this;
 }
 
 std::ostream &DATAItem::print(std::ostream &os)
 {
-	os << sourIP << destIP << sourPort << destPort << proto << endl;
+	os << "DATA INFO || "
+	   << "Source: " << sourIP << ":" << sourPort << "\n"
+	   << "Destination: " << destIP << ":" << destPort << "\n"
+	   << "Protocol: " << proto << "\n"
+	   << endl;
 
 	return os;
 }
 
-
-int base_router::Init()
+base_router &base_router::Init(string rule, string data, string output)
 {
-	outputStream.open(outputFileName);
+	ruleFileName = rule;
+	dataFileName = data;
+	outputFileName = output;
 
-	// outputStream.open(outputFileName, std::ostream::out | std::ostream::trunc);
+	outputStream.open(outputFileName, std::ostream::out | std::ostream::trunc);
 
-	cout << "This is a defination of initialization function" << endl;
-	return 0;
+	if (INFO_STATUS)
+	{
+		InfoPrint(cout, "Open \"" + outputFileName + "\" as output file.");
+	}
+
+	return *this;
 }
 
 int base_router::BuildTree(void)
@@ -86,11 +123,16 @@ int base_router::BuildTree(void)
 	std::string scanStr;
 	std::ifstream ruleStream(ruleFileName, std::ifstream::in);
 
+	if (INFO_STATUS)
+	{
+		InfoPrint(cout, "Open \"" + ruleFileName + "\" as output file.");
+	}
+
 	while (getline(ruleStream, scanStr, '\n'))
 	{
 		newNode = new RULENode;
 		newNode->item.read(scanStr);
-		newNode->item.classID = ruleCount++;
+		newNode->item.classID = nodeCount++;
 		newNode->next = nullptr;
 
 		if (rootNode == nullptr)
@@ -104,9 +146,16 @@ int base_router::BuildTree(void)
 			scanPtr = newNode;
 		}
 
+		if (DEBUG_STATUS)
+		{
+			DebugPrint(cout, "Attached a new rule in tree.\n");
+			newNode->item.print(cout);
+		}
 		// check if success
 
 		// catch some rule file errors
+
+		// catch eof means ending open
 	}
 
 	return 0;
@@ -123,8 +172,13 @@ int base_router::Match(void)
 
 	// traverse tree match a rule
 
-	matchStartTime = clock();
+	if (INFO_STATUS)
+	{
+		InfoPrint(cout, "Open \"" + dataFileName + "\" as data file.");
+	}
 
+
+	matchStartTime = clock();
 
 	while (getline(dataStream, scanStr, '\n'))
 	{
@@ -142,12 +196,14 @@ int base_router::Match(void)
 		// TO-DO
 		// Change to formatted output
 
-		outputStream << scanData.result << endl;
+		outputStream << scanData.result << "\n";
 
 		// TO-DO
 		// Catch some errors
 
 	}
+
+	outputStream << endl;
 
 	matchEndTime = clock();
 
@@ -169,6 +225,11 @@ bool base_router::LinearSearch(DATAItem &packet)
 			scanPtr->item.destPort.isVaild(packet.destPort) && 
 			scanPtr->item.proto.isVaild(packet.proto))
 		{
+			if (DEBUG_STATUS)
+			{
+				DebugPrint(cout, "Matched! ruleID: " + std::to_string(scanPtr->item.classID));
+			}
+
 			packet.result = scanPtr->item.classID;
 			return true;
 		}
@@ -176,6 +237,11 @@ bool base_router::LinearSearch(DATAItem &packet)
 		scanPtr = scanPtr->next;
 	}
 
+	if (DEBUG_STATUS)
+	{
+		DebugPrint(cout, "NOT matched! dataInfo: ");
+		packet.print(cout);
+	}
 	// Throw a error
 	packet.result = -1;
 	return false;
@@ -183,7 +249,7 @@ bool base_router::LinearSearch(DATAItem &packet)
 
 
 // Data pre-process functions
-unsigned int ConvertIPToInt(string ip)
+unsigned int ConvertIPToInt(const string &ip)
 {
 	unsigned int resultIP = 0;
 	unsigned int IPDecimal[4] = {0};
@@ -204,7 +270,7 @@ unsigned int ConvertIPToInt(string ip)
 	return resultIP;
 }
 
-RANGE &RANGE::ApplyMask(string ip, int maskBit)
+RANGE &RANGE::ApplyMask(const string &ip, int maskBit)
 {
 	unsigned int resultIP = ConvertIPToInt(ip);
 
@@ -213,16 +279,14 @@ RANGE &RANGE::ApplyMask(string ip, int maskBit)
 	
 	unsigned mask = -1;
 	if (maskBit != 32)
-	{
 		mask >>= maskBit;
-	}
 	else
-	{
 		mask = 0;
-	}
 
 	start = resultIP & ~mask;
 	end = resultIP | mask;
 
 	return *this;
 }
+
+

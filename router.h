@@ -6,7 +6,8 @@
 // TO-DO
 // Use a funciton to unite different algorithm models.
 
-extern bool isDebug;
+extern bool DEBUG_STATUS;
+extern bool INFO_STATUS;
 extern cmdline::parser cmdParser;
 
 using std::string;
@@ -25,13 +26,14 @@ public:
 	unsigned int start;
 	unsigned int end;
 
-	RANGE &ApplyMask(string ip, int maskBit);
+	RANGE &ApplyMask(const string &ip, int maskBit);
 	bool isVaild(unsigned int var) {return (var >= start && var <=end);};
 };
 
 class PROTRANGE : public RANGE
 {
 public:
+	PROTRANGE() = default;
 	PROTRANGE &init(string &str) {sscanf(str.c_str(), "%x/%x", &start, &end);	return *this;};
 
 	bool isVaild(unsigned int var)
@@ -51,6 +53,7 @@ class RULEItem
 {
 public:
 	unsigned int classID;
+
 	RANGE sourIP;
 	RANGE destIP;
 	RANGE sourPort;
@@ -58,7 +61,7 @@ public:
 	PROTRANGE proto;
 
 	RULEItem &read(string rawRuleString);
-	std::ostream print(void);
+	std::ostream &print(std::ostream &os);
 };
 
 // Data structure
@@ -103,17 +106,17 @@ public:
 	} RULENode;
 
 	base_router() = default;
-	base_router(string rule, string data) {base_router(rule, data, "ans");};
 	base_router(string rule, string data, string output) : ruleFileName(rule), dataFileName(data), outputFileName(output) {};
 
 	// TO-DO
-	int Init();
+	base_router &Init(string rule, string data, string output);
 	int BuildTree(void);
 	int Match(void);
 
 	int add(RULENode &newNode);
-	double time() {return (1.0 * matchEndTime - matchStartTime) / CLOCKS_PER_SEC;};
-	double memory() {return ruleCount;};
+	double time() {return (1.0 * matchEndTime - matchStartTime) / CLOCKS_PER_SEC;};	// Secs
+	int rulenum() {return nodeCount;};
+	long long memory() {return (nodeCount * sizeof(RULENode));};	// Bytes
 
 private:
 	RULENode *rootNode = nullptr;
@@ -123,8 +126,9 @@ private:
 	string outputFileName = "ans";
 
 	std::ofstream outputStream;
+	std::ofstream logStream;
 
-	unsigned int ruleCount = 0;
+	unsigned int nodeCount = 0;
 	unsigned int matchStartTime = 0;
 	unsigned int matchEndTime = 0;
 
@@ -161,5 +165,3 @@ protected:
 
 
 #endif
-
-unsigned int ConvertIPToInt(string ip);
