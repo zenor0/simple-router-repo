@@ -112,8 +112,9 @@ public:
 	base_router &Init(string rule, string data, string output);
 	int BuildTree(void);
 	int Match(void);
-
 	int add(RULENode &newNode);
+
+	// Basic info functions
 	double time() {return (1.0 * matchEndTime - matchStartTime) / CLOCKS_PER_SEC;};	// Secs
 	int rulenum() {return nodeCount;};
 	long long memory() {return (nodeCount * sizeof(RULENode));};	// Bytes
@@ -145,18 +146,44 @@ class hicuts_router : public base_router
 public:
 	hicuts_router() = default;
 	hicuts_router(unsigned int binth, unsigned int spFac) : binth(binth), spFac(spFac) {};
+
+	enum dimension
+	{
+		sourIP		= 1 << 0,
+		destIP		= 1 << 1,
+		sourPort	= 1 << 2,
+		destPort	= 1 << 3,
+		protocol	= 1 << 4,
+	};
+
 	typedef struct RboxHicuts
 	{
-		RULEItem item;
+		RULEItem nodeRange;
+		int cutDimension;
+		unsigned int cutCount;
+
 		struct RboxHicuts *next;
 
 	} RULENode;
 
-	
+	typedef struct RleafHicuts
+	{
+		RULEItem nodeRange;
+		int cutDimension;
+		unsigned int cutCount;
+
+	} RULELeafNode;
+
+
+	int BuildTree();
+	int Match();
+
 private:
+	RULENode *ruleMap = nullptr;
+
 	unsigned int binth = 8;
 	unsigned int spFac = 4;
-	
+
 protected:
 
 
@@ -165,3 +192,63 @@ protected:
 
 
 #endif
+
+
+// HicutsTree Construction Pseudocode
+
+// Necessary structures
+
+	// Base node - store incomplete node(parent node)(big big BOX)
+		// Point to leafnode
+		// maybe array or hash table?? which is better?
+		
+		// k-dimension field		B(v)
+		// dimension to be cut		dim(C(v))
+		// number of patitions		np(C(v))
+
+	// Leaf Node - store rules whose amount belows binth(bin-threshold) (child node)
+		// store rule's classID
+
+// Key parameter (define by users, or decided by rule map?)
+	// binth - bin-threshold
+	// spfac - space factor
+
+// notice
+	// Reduce the dimension as more as possible!
+	// Let np() be 2's power number / even number
+
+
+// Using recusion to build tree!
+// Build function - build(Box(root)) <receiving the box>
+
+	// Read rules as linear list first? to get the main BOX(rule map)
+
+	// Exit recursion conditions
+		// Check if cut's rules <= binth
+			// Let it be a leaf
+			// End building, return
+		// else
+			// still build
+
+	// Decide cut from which demision
+
+	// Cut the box
+
+		// Space measure function decide number of partitions	spmf()
+
+		// Then cut it!
+
+		// For loop the cut(v), 
+			// Recusion, Build them again
+			// Check moudle at the very beginning will decide whether to go on.
+
+
+
+// Check ruleNum moudle
+	// Treverse the whole rule map
+	// Count valid rules
+
+// spmf() so mystrery = =
+	// spmf(N) = spfac * N
+
+// spaceMeasure(C(v)) = numRulesSum(child node) + numberOfPartition(C(v))

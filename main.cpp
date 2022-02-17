@@ -18,7 +18,7 @@ cmdline::parser cmdParser;
 int main(int argc, char* argv[])
 {
 	ParserCommand(argc, argv);
-	
+
 	// Router should receive following parameters
 		// ruleFile
 		// dataFile
@@ -32,18 +32,13 @@ int main(int argc, char* argv[])
 
 	// Initialize router
 		// Build the router tree
-	
 	router.Init(cmdParser.rest()[0], cmdParser.rest()[1], cmdParser.rest()[2]);
 	router.BuildTree();
 	router.Match();
 
-	// Read the dataset
-
-	// Destroy the router properly
-
-
 	// Show the info & Exit program
-	if (cmdParser.exist("info") || cmdParser.exist("debug"))
+		// Destroy the router properly
+	if (INFO_STATUS)
 	{
 		cout.precision(3);
 		cout << "INFO || Exiting the router, show info now..." << "\n"
@@ -98,4 +93,12 @@ void ParserCommand(int argc, char* argv[])
 			cout << "---------------------";
 			cout << endl;
 	}
+}
+
+
+void Exit(void)
+{
+	// Do some cleaning
+	
+	return;
 }
