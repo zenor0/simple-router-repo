@@ -6,21 +6,13 @@
 // Close streams
 using std::getline;
 
-int base_router::Init()
-{
-	outputStream.open(outputFileName);
-
-	// outputStream.open(outputFileName, std::ostream::out | std::ostream::trunc);
-
-	cout << "This is a defination of initialization function" << endl;
-	return 0;
-}
 RULEItem &RULEItem::read(string rawRuleString)
 {
 	// sample rule:
 	// @63.34.10.20/32	255.19.161.32/32	0 : 65535	1521 : 1521	0x06/0xFF
 	std::istringstream ruleStream(rawRuleString);
 	string sourceIP, destinationIP;
+	string protocolStr;
 	int sourMask, destMask;
 
 	// TO-DO
@@ -42,9 +34,41 @@ RULEItem &RULEItem::read(string rawRuleString)
 	(ruleStream >> destPort.start).ignore(3) >> destPort.end;
 	ruleStream.ignore(1, '\t');
 
+	getline(ruleStream, protocolStr);
+	proto.init(protocolStr);
 	(ruleStream >> std::hex >> proto.start).ignore(1) >> std::hex >> proto.end;
 	
 	return *this;
+}
+
+DATAItem &DATAItem::read(string rawDataString)
+{
+	// Sample data
+	// "271033697	2800346112	80	0	17"
+
+	std::istringstream dataStream(rawDataString);
+
+	dataStream >> sourIP >> destIP >> sourPort >> destPort >> proto;
+	
+	return *this;
+}
+
+std::ostream &DATAItem::print(std::ostream &os)
+{
+	os << sourIP << destIP << sourPort << destPort << proto << endl;
+
+	return os;
+}
+
+
+int base_router::Init()
+{
+	outputStream.open(outputFileName);
+
+	// outputStream.open(outputFileName, std::ostream::out | std::ostream::trunc);
+
+	cout << "This is a defination of initialization function" << endl;
+	return 0;
 }
 
 int base_router::BuildTree(void)
@@ -88,33 +112,57 @@ int base_router::BuildTree(void)
 	return 0;
 }
 
-DATAItem &DATAItem::read(string rawDataString)
+// Match! (linear search ver)
+
+int base_router::Match(void)
 {
-	// Sample data
-	// "271033697	2800346112	80	0	17"
+	std::ifstream dataStream(dataFileName, std::ifstream::in);
+	std::string scanStr;
+	DATAItem scanData;
+	// create a temp data variable;
 
-	std::istringstream dataStream(rawDataString);
+	// traverse tree match a rule
 
-	dataStream >> sourIP >> destIP >> sourPort >> destPort >> proto;
-	
-	return *this;
+	matchStartTime = clock();
+
+
+	while (getline(dataStream, scanStr, '\n'))
+	{
+		// Read in a packet
+		scanData.read(scanStr);
+		
+		// Traverse the list, match rules.
+
+		if (!LinearSearch(scanData))
+		{
+			// TO-DO
+			// Throw a error
+		}
+
+		// TO-DO
+		// Change to formatted output
+
+		outputStream << scanData.result << endl;
+
+		// TO-DO
+		// Catch some errors
+
+	}
+
+	matchEndTime = clock();
+
+	return 0;
 }
 
-std::ostream &DATAItem::print(std::ostream &os)
-{
-	os << sourIP << destIP << sourPort << destPort << proto << endl;
-
-	return os;
-}
 
 bool base_router::LinearSearch(DATAItem &packet)
 {
 	RULENode *scanPtr = rootNode;
 
-	while (scanPtr->next != nullptr)
+	while (scanPtr != nullptr)
 	{
 		// Match one by one
-
+		
 		if (scanPtr->item.sourIP.isVaild(packet.sourIP) && 
 			scanPtr->item.destIP.isVaild(packet.destIP) && 
 			scanPtr->item.sourPort.isVaild(packet.sourPort) && 
@@ -133,60 +181,8 @@ bool base_router::LinearSearch(DATAItem &packet)
 	return false;
 }
 
-// Match! (linear search ver)
 
-int base_router::Match(void)
-{
-	std::ifstream dataStream(dataFileName, std::ifstream::in);
-	std::string scanStr;
-	DATAItem scanData;
-
-	RULENode *scanPtr = rootNode;
-	DATAItem tempData;
-	// create a temp data variable;
-
-	// traverse tree match a rule
-
-	matchStartTime = clock();
-
-
-	while (getline(dataStream, scanStr, '\n'))
-	{
-		// Read in a packet
-		tempData.read(scanStr);
-		
-		// Traverse the list, match rules.
-		while (scanPtr->next != nullptr)
-		{
-			if (!LinearSearch(tempData))
-			{
-				// TO-DO
-				// Throw a error
-			}
-
-			if (cmdParser.exist("debug"))
-			{
-				outputStream << tempData.result << endl;
-			}
-			else
-			{
-				tempData.print(outputStream);
-			}
-			
-			// TO-DO
-			// Catch some errors
-			scanPtr = scanPtr->next;
-		}
-	}
-
-	matchEndTime = clock();
-
-	return 0;
-}
-
-
-
-
+// Data pre-process functions
 unsigned int ConvertIPToInt(string ip)
 {
 	unsigned int resultIP = 0;
@@ -208,23 +204,9 @@ unsigned int ConvertIPToInt(string ip)
 	return resultIP;
 }
 
-IPRANGE &IPRANGE::ApplyMask(string ip, int maskBit)
+RANGE &RANGE::ApplyMask(string ip, int maskBit)
 {
-	unsigned int resultIP = 0;
-	unsigned int IPDecimal[4] = {0};
-	const char *IPCStr = ip.c_str();
-
-	// Check format
-	if(sscanf(IPCStr, "%d.%d.%d.%d", &IPDecimal[0], &IPDecimal[1], &IPDecimal[2], &IPDecimal[3]) != 4)
-	{
-		// TO-DO
-		// Error catch
-	}
-
-	for (int i = 0; i < 4; i++)
-	{
-		resultIP += IPDecimal[i] << ((4 - i - 1) * 8);
-	}
+	unsigned int resultIP = ConvertIPToInt(ip);
 
 	// Generate a int32 full 1 mask (i.e. 11111111 11111111 11111111 11111111)
 	// Right shift make => (maskbit) + 11..111
@@ -244,5 +226,3 @@ IPRANGE &IPRANGE::ApplyMask(string ip, int maskBit)
 
 	return *this;
 }
-
-

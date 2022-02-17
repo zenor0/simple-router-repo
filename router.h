@@ -6,7 +6,6 @@
 // TO-DO
 // Use a funciton to unite different algorithm models.
 
-
 extern bool isDebug;
 extern cmdline::parser cmdParser;
 
@@ -26,13 +25,23 @@ public:
 	unsigned int start;
 	unsigned int end;
 
+	RANGE &ApplyMask(string ip, int maskBit);
 	bool isVaild(unsigned int var) {return (var >= start && var <=end);};
 };
 
-class IPRANGE : public RANGE
+class PROTRANGE : public RANGE
 {
 public:
-	IPRANGE &ApplyMask(string ip, int maskBit);
+	PROTRANGE &init(string &str) {sscanf(str.c_str(), "%x/%x", &start, &end);	return *this;};
+
+	bool isVaild(unsigned int var)
+	{
+		if (end == 0xFF)
+			return var == start;
+		if (end == 0x00)
+			return true;
+		return RANGE::isVaild(var);
+	}
 };
 
 
@@ -42,11 +51,11 @@ class RULEItem
 {
 public:
 	unsigned int classID;
-	IPRANGE sourIP;
-	IPRANGE destIP;
+	RANGE sourIP;
+	RANGE destIP;
 	RANGE sourPort;
 	RANGE destPort;
-	RANGE proto;
+	PROTRANGE proto;
 
 	RULEItem &read(string rawRuleString);
 	std::ostream print(void);
@@ -94,7 +103,7 @@ public:
 	} RULENode;
 
 	base_router() = default;
-	base_router(string rule, string data) {base_router(rule, data, "ans.txt");};
+	base_router(string rule, string data) {base_router(rule, data, "ans");};
 	base_router(string rule, string data, string output) : ruleFileName(rule), dataFileName(data), outputFileName(output) {};
 
 	// TO-DO
@@ -109,9 +118,9 @@ public:
 private:
 	RULENode *rootNode = nullptr;
 
-	string ruleFileName = "rule.txt";
-	string dataFileName = "packet1.txt";
-	string outputFileName = "ans.txt";
+	string ruleFileName = "rule";
+	string dataFileName = "packet";
+	string outputFileName = "ans";
 
 	std::ofstream outputStream;
 
