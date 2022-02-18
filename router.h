@@ -52,6 +52,7 @@ public:
 	RANGE &ApplyMask(const string &ip, int maskBit);
 	bool isVaild(unsigned int var) {return (var >= start && var <= end);};
 	bool isVaild(RANGE &var) {return (var.start >= start && var.end <= end);};
+	bool isContained(RANGE &var) {return (var.start <= start && var.end >= end);};
 };
 
 class PROTRANGE : public RANGE
@@ -59,7 +60,9 @@ class PROTRANGE : public RANGE
 public:
 	PROTRANGE() = default;
 	PROTRANGE &init(const string &str) {sscanf(str.c_str(), "%x/%x", &start, &end);	return *this;};
+	
 	bool isVaild(PROTRANGE &var) {return (var.start >= start && var.end <= end);};
+	bool isContained(PROTRANGE &var) {return (var.start <= start && var.end >= end);};
 
 	bool isVaild(unsigned int var)
 	{
@@ -103,7 +106,7 @@ public:
 				return proto;
 			default:
 			// Throw a error
-				cout << "cast error" << endl;
+				cout << "cast error2" << endl;
 				return sourIP;
 		}
 	};
@@ -141,7 +144,7 @@ public:
 				return proto;
 			default:
 			// Throw a error
-				cout << "cast error" << endl;
+				cout << "cast error1" << endl;
 				return sourIP;
 		}
 	};
@@ -149,6 +152,8 @@ public:
 											destPort.isVaild(packet.destPort) && proto.isVaild(packet.proto));};
 	bool isValid(RULEItem &packet) {return (sourIP.isVaild(packet.sourIP) && destIP.isVaild(packet.destIP) && sourPort.isVaild(packet.sourPort) &&
 											destPort.isVaild(packet.destPort) && proto.isVaild(packet.proto));};
+	bool isContained(RULEItem &range) {return (sourIP.isContained(range.sourIP) && destIP.isContained(range.destIP) && sourPort.isContained(range.sourPort) &&
+											destPort.isContained(range.destPort) && proto.isContained(range.proto));};
 
 };
 
@@ -157,23 +162,26 @@ public:
 #ifndef CORECLA___
 #define CORECLA___
 
+typedef struct RnodeNaive
+{
+	RULEItem item;
+	struct RnodeNaive *next;
+
+} RuleNodeBase;
+
 
 class base_router
 {
 public:
-	typedef struct RnodeNaive
-	{
-		RULEItem item;
-		struct RnodeNaive *next;
-
-	} RuleNodeBase;
 
 	base_router() = default;
 	base_router(string rule, string data, string output) : ruleFileName(rule), dataFileName(data), outputFileName(output) {};
 
-	// TO-DO
+
+	base_router &Init();
 	base_router &Init(string rule, string data, string output);
 	int Match(void);
+	// TO-DO
 	int add(RuleNodeBase &newNode);
 
 	// Basic info functions
@@ -182,8 +190,6 @@ public:
 	long long memory() {return (nodeCount * sizeof(RuleNodeBase));};	// Bytes
 
 private:
-
-protected:
 	string routerType = "naive";
 	RuleNodeBase *rootMap = nullptr;
 
@@ -204,7 +210,7 @@ protected:
 };
 
 // Hicuts
-class hicuts_router : public base_router
+class hicuts_router
 {
 public:
 	hicuts_router() = default;
@@ -247,12 +253,30 @@ public:
 	// TO-DO
 	// Update();
 	// del();
+
+	double time() {return (1.0 * matchEndTime - matchStartTime) / CLOCKS_PER_SEC;};	// Secs
+	int rulenum() {return nodeCount;};
+	long long memory() {return (nodeCount * sizeof(RuleNodeBase));};	// Bytes
 private:
-	string router_type = "Hicuts";
+	string routerType = "Hicuts";
 	RboxHicuts *rootNode = nullptr;
+	RuleNodeBase *rootMap = nullptr;
 
 	unsigned int binth = 8;
 	unsigned int spFac = 4;
+
+	string ruleFileName = "rule";
+	string dataFileName = "packet";
+	string outputFileName = "out";
+
+	std::ofstream outputStream;
+	std::ofstream logStream;
+
+	unsigned int nodeCount = 0;
+	unsigned int matchStartTime = 0;
+	unsigned int matchEndTime = 0;
+
+	int ReadRuleMap(const string &ruleFileName);
 
 
 protected:

@@ -111,6 +111,22 @@ base_router &base_router::Init(string rule, string data, string output)
 	return *this;
 }
 
+base_router &base_router::Init()
+{
+
+	outputStream.open(outputFileName, std::ostream::out | std::ostream::trunc);
+
+	if (INFO_STATUS)
+	{
+		InfoPrint(cout, "Open \"" + outputFileName + "\" as output file.");
+		InfoPrint(cout, "Start to build tree <" + routerType + ">");
+	}
+
+	ReadRuleMap(ruleFileName);
+
+	return *this;
+}
+
 hicuts_router &hicuts_router::Init()
 {
 	outputStream.open(outputFileName, std::ostream::out | std::ostream::trunc);
@@ -187,6 +203,60 @@ int base_router::ReadRuleMap(const string &ruleFileName)
 	return 0;
 }
 
+// a stupid copy
+int hicuts_router::ReadRuleMap(const string &ruleFileName)
+{
+	// Base router use naive algorithm
+	// Build onw-way linked list
+
+
+	// TO-DO
+	// if there is a tree, then delete it.
+
+	RuleNodeBase *scanPtr = rootMap;
+	RuleNodeBase *newNode;
+
+	std::string scanStr;
+	std::ifstream ruleStream(ruleFileName, std::ifstream::in);
+
+	if (INFO_STATUS)
+	{
+		InfoPrint(cout, "Open \"" + ruleFileName + "\" as rule file.");
+	}
+
+	while (getline(ruleStream, scanStr, '\n'))
+	{
+		newNode = new RuleNodeBase;
+		newNode->item.read(scanStr);
+		newNode->item.classID = nodeCount++;
+		newNode->next = nullptr;
+
+		if (rootMap == nullptr)
+		{
+			rootMap = newNode;
+			scanPtr = newNode;
+		}
+		else
+		{
+			scanPtr->next = newNode;
+			scanPtr = newNode;
+		}
+
+		if (DEBUG_STATUS)
+		{
+			DebugPrint(cout, "Attached a new rule in tree.\n");
+			newNode->item.print(cout);
+		}
+		// check if success
+
+		// catch some rule file errors
+
+		// catch eof means ending open
+	}
+
+	return 0;
+}
+
 
 unsigned int hicuts_router::RboxHicuts::GetRuleNum(RuleNodeBase &ruleMap)
 {
@@ -195,12 +265,17 @@ unsigned int hicuts_router::RboxHicuts::GetRuleNum(RuleNodeBase &ruleMap)
 
 	while (scanPtr != nullptr)
 	{
-		if (scanPtr->item.isValid(nodeRange))
+		if (scanPtr->item.isContained(nodeRange))
 		{
 			ret++;
 		}
 
 		scanPtr = scanPtr->next;
+	}
+
+	if (INFO_STATUS)
+	{
+		cout << "getrule" << ret << endl;
 	}
 
 	return ret;
@@ -209,6 +284,7 @@ unsigned int hicuts_router::RboxHicuts::GetRuleNum(RuleNodeBase &ruleMap)
 unsigned int hicuts_router::RboxHicuts::GetRuleNumSumInNP(RuleNodeBase &ruleMap, unsigned int np, unsigned int dim)
 {
 	unsigned int ret = 0;
+	dim = dimension::sourIP;
 
 	unsigned int intBuf = nodeRange.DimCast(dim).length() / np;
 	unsigned int boxRangeOffset = nodeRange.DimCast(dim).start;
@@ -227,6 +303,11 @@ unsigned int hicuts_router::RboxHicuts::GetRuleNumSumInNP(RuleNodeBase &ruleMap,
 		ret += newBox.GetRuleNum(ruleMap);
 	}
 
+		if (INFO_STATUS)
+	{
+		cout << "getrule" << ret << "in" << np << endl;
+	}
+
 
 	return ret;
 }
@@ -239,6 +320,11 @@ unsigned int hicuts_router::GetNP(RboxHicuts &box)
 	while (box.GetRuleNumSumInNP(*rootMap, ret, box.cutDimension) + ret <= spmfBuf)
 	{
 		ret *= 2;
+	}
+
+	if (INFO_STATUS)
+	{
+		cout << "getnp" << ret << endl;
 	}
 
 	return ret;
@@ -264,7 +350,7 @@ hicuts_router::RboxHicuts &hicuts_router::RboxHicuts::SetLeaf(RuleNodeBase &rule
 
 	while (scanPtr != nullptr)
 	{
-		if (scanPtr->item.isValid(nodeRange))
+		if (scanPtr->item.isContained(nodeRange))
 		{
 			ruleValid.push_back(&(scanPtr->item));
 		}
