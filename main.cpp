@@ -12,7 +12,7 @@ using std::cout, std::endl;
 using std::string;
 
 bool DEBUG_STATUS = false;
-bool INFO_STATUS = false;
+bool INFO_STATUS = true;
 cmdline::parser cmdParser;
 
 int main(int argc, char* argv[])
@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
 		// dataFile
 		// algorithmName
 
-	base_router router;
+	hicuts_router router;
 
 	// If benchmark mode on
 		// Parse the list file.
@@ -32,8 +32,7 @@ int main(int argc, char* argv[])
 
 	// Initialize router
 		// Build the router tree
-	router.Init(cmdParser.rest()[0], cmdParser.rest()[1], cmdParser.rest()[2]);
-	router.BuildTree();
+	router.Init();
 	router.Match();
 
 	// Show the info & Exit program
@@ -66,12 +65,12 @@ void ParserCommand(int argc, char* argv[])
 	cmdParser.parse_check(argc, argv);
 
 
-	INFO_STATUS = cmdParser.exist("info") ? true : false;
-	if (cmdParser.exist("debug"))
-	{
-		DEBUG_STATUS = true;
-		INFO_STATUS = true;
-	}
+	// INFO_STATUS = cmdParser.exist("info") ? true : false;
+	// if (cmdParser.exist("debug"))
+	// {
+	// 	DEBUG_STATUS = true;
+	// 	INFO_STATUS = true;
+	// }
 
 	// Arguments debug info
 	if (DEBUG_STATUS)
