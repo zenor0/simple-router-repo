@@ -52,26 +52,25 @@ public:
 	RANGE &ApplyMask(const string &ip, int maskBit);
 	bool isVaild(unsigned int var) {return (var >= start && var <= end);};
 	bool isVaild(RANGE &var) {return (var.start >= start && var.end <= end);};
-	bool isContained(RANGE &var) {return (var.end >= start || var.start <= end || (var.start <= start && var.end >= end));};
+	bool isContained(RANGE &var) {return (isVaild(var.start) || isVaild(var.end) || isVaild(var));};
 };
 
 class PROTRANGE : public RANGE
 {
 public:
 	PROTRANGE() = default;
-	PROTRANGE &init(const string &str) {sscanf(str.c_str(), "%x/%x", &start, &end);	return *this;};
+	PROTRANGE &init(const string &str)
+	{
+		sscanf(str.c_str(), "%x/%x", &start, &end);
+		if (end == 0xFF) end = start;
+		if (end == 0x00) {start = 0; end = 0xff;} 
+		return *this;
+	};
 	
 	bool isVaild(PROTRANGE &var) {return (var.start >= start && var.end <= end);};
-	bool isContained(PROTRANGE &var) {return (var.end >= start || var.start <= end || (var.start <= start && var.end >= end));};
+	bool isContained(PROTRANGE &var) {return (isVaild(var.start) || isVaild(var.end));};
 
-	bool isVaild(unsigned int var)
-	{
-		if (end == 0xFF)
-			return var == start;
-		if (end == 0x00)
-			return true;
-		return RANGE::isVaild(var);
-	}
+	bool isVaild(unsigned int var) {return (var >= start && var <= end);};
 };
 
 
@@ -152,8 +151,8 @@ public:
 											destPort.isVaild(packet.destPort) && proto.isVaild(packet.proto));};
 	bool isValid(RULEItem &packet) {return (sourIP.isVaild(packet.sourIP) && destIP.isVaild(packet.destIP) && sourPort.isVaild(packet.sourPort) &&
 											destPort.isVaild(packet.destPort) && proto.isVaild(packet.proto));};
-	bool isContained(RULEItem &range) {return (sourIP.isContained(range.sourIP) && destIP.isContained(range.destIP) && sourPort.isContained(range.sourPort) &&
-											destPort.isContained(range.destPort) && proto.isContained(range.proto));};
+	bool isContained(RULEItem &boxRange) {return (sourIP.isContained(boxRange.sourIP) && destIP.isContained(boxRange.destIP) && sourPort.isContained(boxRange.sourPort) &&
+											destPort.isContained(boxRange.destPort) && proto.isContained(boxRange.proto));};
 
 };
 
@@ -221,7 +220,7 @@ public:
 	public:
 		RULEItem nodeRange;		// decide by upper node
 								// define this node's Range
-		int cutDimension;		// dynamic
+		int cutDimension = -1;		// dynamic
 		unsigned int np = 2;	// np(short for Number of Partitions), must be multiples of 2
 
 		std::vector<RboxHicuts *> next;	//divided by cutDimension, cutCount partitions in total.

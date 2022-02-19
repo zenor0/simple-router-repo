@@ -129,10 +129,14 @@ base_router &base_router::Init()
 
 hicuts_router &hicuts_router::Init()
 {
+	// Initialize rootNode
+
 	outputStream.open(outputFileName, std::ostream::out | std::ostream::trunc);
 
 	ReadRuleMap(ruleFileName);
 
+
+	// Generalize full range
 	RboxHicuts *initBox = new RboxHicuts;
 
 	initBox->nodeRange.sourIP.ApplyMask("0.0.0.0", 0);
@@ -141,7 +145,7 @@ hicuts_router &hicuts_router::Init()
 	initBox->nodeRange.sourPort.end = 65565;
 	initBox->nodeRange.destPort.start = 0;
 	initBox->nodeRange.destPort.end = 65565;
-	initBox->nodeRange.proto.init("0x00/0xFF");
+	initBox->nodeRange.proto.init("0x00/0x00");
 
 	rootNode = initBox;
 	BuildTree(*rootNode);
@@ -203,7 +207,7 @@ int base_router::ReadRuleMap(const string &ruleFileName)
 	return 0;
 }
 
-// a stupid copy
+// a stupid copy, del it after debug
 int hicuts_router::ReadRuleMap(const string &ruleFileName)
 {
 	// Base router use naive algorithm
@@ -265,6 +269,7 @@ unsigned int hicuts_router::RboxHicuts::GetRuleNum(RuleNodeBase &ruleMap)
 
 	while (scanPtr != nullptr)
 	{
+		// Check ruleItem if interact with boxNodeRange
 		if (scanPtr->item.isContained(nodeRange))
 		{
 			ret++;
@@ -284,24 +289,24 @@ unsigned int hicuts_router::RboxHicuts::GetRuleNumSumInNP(RuleNodeBase &ruleMap,
 	unsigned int boxRangeOffset = nodeRange.DimCast(dim).start;	// start offset
 
 	RboxHicuts newBox = *this;
-	RANGE *newBoxRange = &(newBox.nodeRange.DimCast(dim));
-	newBoxRange->start = intBuf + boxRangeOffset;
+	RANGE *newBoxRange = &(newBox.nodeRange.DimCast(dim));	// set a pointer for the sake of convenience
+	newBoxRange->start = boxRangeOffset;
 	newBoxRange->end = intBuf - 1 + boxRangeOffset;
 
 	for (unsigned int i = 0; i < np; i++)
 	{
+		ret += newBox.GetRuleNum(ruleMap);
 		// Updata newBox range, let it be a presumably box
+
+
 		newBoxRange->start += intBuf;
 		newBoxRange->end += intBuf;
-
-		ret += newBox.GetRuleNum(ruleMap);
 	}
 
-		if (INFO_STATUS)
-	{
-		cout << "getrule" << ret << "in" << np << endl;
-	}
-
+	// if (INFO_STATUS)
+	// {
+	// 	cout << "getrule" << ret << "in" << np << endl;
+	// }
 
 	return ret;
 }
@@ -309,17 +314,18 @@ unsigned int hicuts_router::RboxHicuts::GetRuleNumSumInNP(RuleNodeBase &ruleMap,
 unsigned int hicuts_router::GetNP(RboxHicuts &box)
 {
 	unsigned int spmfBuf = spmf(box.GetRuleNum(*rootMap));
-	unsigned int ret = box.np;
-
+	unsigned int ret = 2;
+	
+	// Condition defines by No.1 heuristic rule
 	while (box.GetRuleNumSumInNP(*rootMap, ret, box.cutDimension) + ret <= spmfBuf)
 	{
-		ret *= 2;
+		ret <<= 1;
 	}
 
-	if (INFO_STATUS)
-	{
-		cout << "getnp" << ret << endl;
-	}
+	// if (INFO_STATUS)
+	// {
+	// 	cout << "getnp" << ret << endl;
+	// }
 
 	return ret;
 }
@@ -339,7 +345,6 @@ hicuts_router::RboxHicuts *hicuts_router::RboxHicuts::GetNext(DATAItem &packet)
 
 hicuts_router::RboxHicuts &hicuts_router::RboxHicuts::SetLeaf(RuleNodeBase &ruleMap)
 {
-	isLeaf = true;
 	RuleNodeBase *scanPtr = &ruleMap;
 
 	while (scanPtr != nullptr)
@@ -352,6 +357,12 @@ hicuts_router::RboxHicuts &hicuts_router::RboxHicuts::SetLeaf(RuleNodeBase &rule
 		scanPtr = scanPtr->next;
 	}
 
+	if (ruleValid.empty() == true)
+	{
+		cout << "wtf, empty leaf" << endl;
+	}
+
+	isLeaf = true;
 	return *this;
 }
 
@@ -363,7 +374,7 @@ hicuts_router::RboxHicuts &hicuts_router::RboxHicuts::SetDimension(RuleNodeBase 
 	// Minimize sm()! by using exist functions
 	// since np is fixed, what we gonna to do is to find the min(sum(rule of children))
 
-	unsigned int constnp = this->GetRuleNum(ruleMap) / 8;
+	unsigned int constnp = 8;
 
 	unsigned int dimSign = dimension::sourIP;
 	unsigned int dimMin = dimSign;
@@ -380,31 +391,36 @@ hicuts_router::RboxHicuts &hicuts_router::RboxHicuts::SetDimension(RuleNodeBase 
 			dimMin = dimSign;
 		}
 
+		// Go to next dimension
 		dimSign <<= 1;
 	}
 
+	// Set dim value
 	cutDimension = dimMin;
-
 	return *this;
 }
 hicuts_router::RboxHicuts &hicuts_router::RboxHicuts::CutBox(unsigned int np, unsigned int dim)
 {
-	unsigned int lenBuf = nodeRange.DimCast(dim).length();
+	long long lenBuf = nodeRange.DimCast(dim).length();
 	unsigned int intBuf = lenBuf / np;
 	unsigned int boxRangeOffset = nodeRange.DimCast(dim).start;
 
+	RboxHicuts *newBox = nullptr;
+
 	for (unsigned int i = 0; i < np; i++)
 	{
-		RboxHicuts *newBox = new RboxHicuts;
+		newBox = new RboxHicuts;
 
 		// Cut range as assigned dimension
 		newBox->nodeRange = this->nodeRange;
 		newBox->nodeRange.DimCast(dim).start = i * intBuf + boxRangeOffset;
 		newBox->nodeRange.DimCast(dim).end = (i + 1) * intBuf - 1 + boxRangeOffset;
 
-		// Append newBox, make it as Box's child node
+		// Append newBox, make it Box's child node
 		next.push_back(newBox);
 	}
+
+	// cout << "dim: " << dim << "np: " << np << endl;
 
 	return *this;
 }
@@ -444,7 +460,6 @@ int hicuts_router::BuildTree(RboxHicuts &box)
 		BuildTree(*i);
 	}
 
-	return 0;
 }
 
 // Match! (linear search ver)
