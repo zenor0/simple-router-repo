@@ -273,32 +273,26 @@ unsigned int hicuts_router::RboxHicuts::GetRuleNum(RuleNodeBase &ruleMap)
 		scanPtr = scanPtr->next;
 	}
 
-	if (INFO_STATUS)
-	{
-		cout << "getrule" << ret << endl;
-	}
-
 	return ret;
 }
 
 unsigned int hicuts_router::RboxHicuts::GetRuleNumSumInNP(RuleNodeBase &ruleMap, unsigned int np, unsigned int dim)
 {
 	unsigned int ret = 0;
-	dim = dimension::sourIP;
 
-	unsigned int intBuf = nodeRange.DimCast(dim).length() / np;
-	unsigned int boxRangeOffset = nodeRange.DimCast(dim).start;
+	unsigned int intBuf = nodeRange.DimCast(dim).length() / np;	// intervals
+	unsigned int boxRangeOffset = nodeRange.DimCast(dim).start;	// start offset
 
 	RboxHicuts newBox = *this;
-	RANGE &newBoxRange = newBox.nodeRange.DimCast(dim);
-	newBoxRange.start = intBuf + boxRangeOffset;
-	newBoxRange.end = intBuf - 1 + boxRangeOffset;
+	RANGE *newBoxRange = &(newBox.nodeRange.DimCast(dim));
+	newBoxRange->start = intBuf + boxRangeOffset;
+	newBoxRange->end = intBuf - 1 + boxRangeOffset;
 
 	for (unsigned int i = 0; i < np; i++)
 	{
 		// Updata newBox range, let it be a presumably box
-		newBoxRange.start += intBuf;
-		newBoxRange.end += intBuf;
+		newBoxRange->start += intBuf;
+		newBoxRange->end += intBuf;
 
 		ret += newBox.GetRuleNum(ruleMap);
 	}
@@ -369,14 +363,16 @@ hicuts_router::RboxHicuts &hicuts_router::RboxHicuts::SetDimension(RuleNodeBase 
 	// Minimize sm()! by using exist functions
 	// since np is fixed, what we gonna to do is to find the min(sum(rule of children))
 
+	unsigned int constnp = this->GetRuleNum(ruleMap) / 8;
+
 	unsigned int dimSign = dimension::sourIP;
 	unsigned int dimMin = dimSign;
-	unsigned int smMin = GetRuleNumSumInNP(ruleMap, np, dimSign);
+	unsigned int smMin = GetRuleNumSumInNP(ruleMap, constnp, dimSign);
 	unsigned int temVar;
 
 	while (dimSign != dimension::protocol)
 	{
-		temVar = GetRuleNumSumInNP(ruleMap, np, dimSign);
+		temVar = GetRuleNumSumInNP(ruleMap, constnp, dimSign);
 
 		if (temVar < smMin)
 		{
@@ -422,12 +418,13 @@ int hicuts_router::BuildTree(RboxHicuts &box)
 	if (box.GetRuleNum(*rootMap) <= binth)
 	{
 		box.SetLeaf(*rootMap);
-		return 0;	// End building, finish Node constructure
+		return 0;
 	}
+
+	box.SetDimension(*rootMap);
 
 	box.np = GetNP(box);
 
-	box.SetDimension(*rootMap);
 
 	// Cut BOX
 

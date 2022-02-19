@@ -48,11 +48,11 @@ public:
 	unsigned int start;
 	unsigned int end;
 
-	unsigned int length() {return end - start + 1;};
+	long long length() {return (long long)end - start + 1;};
 	RANGE &ApplyMask(const string &ip, int maskBit);
 	bool isVaild(unsigned int var) {return (var >= start && var <= end);};
 	bool isVaild(RANGE &var) {return (var.start >= start && var.end <= end);};
-	bool isContained(RANGE &var) {return (var.start <= start && var.end >= end);};
+	bool isContained(RANGE &var) {return (var.end >= start || var.start <= end || (var.start <= start && var.end >= end));};
 };
 
 class PROTRANGE : public RANGE
@@ -62,7 +62,7 @@ public:
 	PROTRANGE &init(const string &str) {sscanf(str.c_str(), "%x/%x", &start, &end);	return *this;};
 	
 	bool isVaild(PROTRANGE &var) {return (var.start >= start && var.end <= end);};
-	bool isContained(PROTRANGE &var) {return (var.start <= start && var.end >= end);};
+	bool isContained(PROTRANGE &var) {return (var.end >= start || var.start <= end || (var.start <= start && var.end >= end));};
 
 	bool isVaild(unsigned int var)
 	{
