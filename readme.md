@@ -19,3 +19,8 @@ options:
   -d, --debug        Debug Mode          - run router in debug mode.
   -i, --info         Show info           - show info, including time and memory info.
   -?, --help         print this message
+
+
+## Acknowledgment
+
+command line parsing is supported by an opensource repo - cmdline[https://github.com/tanakh/cmdline].
