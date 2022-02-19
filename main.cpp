@@ -5,14 +5,14 @@
 #include "cmdline.h"
 
 
-
+std::vector<string> &ReadPacketList(std::vector<string> &vec, string fileName);
 void ParserCommand(int argc, char* argv[]);
 
 using std::cout, std::endl;
 using std::string;
 
 bool DEBUG_STATUS = false;
-bool INFO_STATUS = true;
+bool INFO_STATUS = false;
 cmdline::parser cmdParser;
 
 int main(int argc, char* argv[])
@@ -24,11 +24,46 @@ int main(int argc, char* argv[])
 		// dataFile
 		// algorithmName
 
-	hicuts_router router;
+	base_router router;
+
+	if (cmdParser.exist("benchmark"))
+	{
+		// Getlist file
+
+		// Read list file
+		std::vector<string> packetList;
+		double timeTotal = 0;
+
+		ReadPacketList(packetList, cmdParser.get<string>("benchmark"));
+
+		for (auto i : packetList)
+		{
+			InfoPrint(cout, "Benchmark started! Parsing assigned <" + cmdParser.get<string>("benchmark") + ">...");
+			router.Init("rule", i, "output");
+			router.Match();
+			
+			InfoPrint(cout, i + " Matching finished!");
+			timeTotal += router.time();
+		}
+
+		if (INFO_STATUS)
+		{
+			cout.precision(3);
+			cout << "INFO || Benchmark ended." << "\n"
+				<< "---------------------" << "\n"
+				<< "Totoal Time: " << timeTotal << "\n"
+				;
+
+			cout << endl;
+		}
+
+
+		return 0;
+	}
 
 	// If benchmark mode on
 		// Parse the list file.
-		// Updata outputfile name every time read a file.
+		// Update outputfile name every time read a file.
 
 	// Initialize router
 		// Build the router tree
@@ -65,12 +100,12 @@ void ParserCommand(int argc, char* argv[])
 	cmdParser.parse_check(argc, argv);
 
 
-	// INFO_STATUS = cmdParser.exist("info") ? true : false;
-	// if (cmdParser.exist("debug"))
-	// {
-	// 	DEBUG_STATUS = true;
-	// 	INFO_STATUS = true;
-	// }
+	INFO_STATUS = cmdParser.exist("info") ? true : false;
+	if (cmdParser.exist("debug"))
+	{
+		DEBUG_STATUS = true;
+		INFO_STATUS = true;
+	}
 
 	// Arguments debug info
 	if (DEBUG_STATUS)
@@ -100,4 +135,18 @@ void Exit(void)
 	// Do some cleaning
 	
 	return;
+}
+
+std::vector<string> &ReadPacketList(std::vector<string> &vec, string fileName)
+{
+	std::ifstream listStream(fileName, std::ifstream::in);
+
+	string scanStr;
+
+	while (std::getline(listStream, scanStr))
+	{
+		vec.push_back(scanStr);
+	} 
+
+	return vec;
 }

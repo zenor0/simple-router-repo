@@ -6,19 +6,7 @@
 // Close streams
 using std::getline;
 
-// Logging functions
 
-inline std::ostream &InfoPrint(std::ostream &os, string str)
-{
-	os << "INFO || " << str << endl;
-	return os;
-}
-
-inline std::ostream &DebugPrint(std::ostream &os, string str)
-{
-	os << "DEBUG || " << str << endl;
-	return os;
-}
 
 RULEItem &RULEItem::read(string rawRuleString)
 {
@@ -270,14 +258,14 @@ unsigned int hicuts_router::RboxHicuts::GetRuleNum(RuleNodeBase &ruleMap)
 	while (scanPtr != nullptr)
 	{
 		// Check ruleItem if interact with boxNodeRange
-		if (scanPtr->item.isContained(nodeRange))
+		if (scanPtr->item.isIntersect(nodeRange))
 		{
 			ret++;
 		}
 
 		scanPtr = scanPtr->next;
 	}
-
+	// cout << "getrule: " << ret << "\n" ;
 	return ret;
 }
 
@@ -303,6 +291,8 @@ unsigned int hicuts_router::RboxHicuts::GetRuleNumSumInNP(RuleNodeBase &ruleMap,
 		newBoxRange->end += intBuf;
 	}
 
+
+
 	// if (INFO_STATUS)
 	// {
 	// 	cout << "getrule" << ret << "in" << np << endl;
@@ -311,21 +301,69 @@ unsigned int hicuts_router::RboxHicuts::GetRuleNumSumInNP(RuleNodeBase &ruleMap,
 	return ret;
 }
 
+unsigned int hicuts_router::RboxHicuts::GetRuleNumMaxInNP(RuleNodeBase &ruleMap, unsigned int np, unsigned int dim)
+{
+	unsigned int intBuf = nodeRange.DimCast(dim).length() / np;	// intervals
+	unsigned int boxRangeOffset = nodeRange.DimCast(dim).start;	// start offset
+
+	RboxHicuts newBox = *this;
+	RANGE *newBoxRange = &(newBox.nodeRange.DimCast(dim));	// set a pointer for the sake of convenience
+	newBoxRange->start = boxRangeOffset;
+	newBoxRange->end = intBuf - 1 + boxRangeOffset;
+
+	unsigned int maxVar = 0;
+	unsigned int temVar;
+
+	for (unsigned int i = 0; i < np; i++)
+	{
+		temVar = newBox.GetRuleNum(ruleMap);
+		// Updata newBox range, let it be a presumably box
+
+		if (temVar > maxVar)
+		{
+			maxVar = temVar;
+		}
+
+		newBoxRange->start += intBuf;
+		newBoxRange->end += intBuf;
+	}
+
+	return maxVar;
+}
+
 unsigned int hicuts_router::GetNP(RboxHicuts &box)
 {
 	unsigned int spmfBuf = spmf(box.GetRuleNum(*rootMap));
-	unsigned int ret = 2;
+	unsigned int ret = 1;
+	unsigned int dim = box.GetDimension(*rootMap, *this);
 	
 	// Condition defines by No.1 heuristic rule
-	while (box.GetRuleNumSumInNP(*rootMap, ret, box.cutDimension) + ret <= spmfBuf)
+	while (box.GetRuleNumSumInNP(*rootMap, ret, dim) + ret <= spmfBuf
+		 && ret <= box.nodeRange.DimCast(dim).length())
 	{
 		ret <<= 1;
 	}
+
 
 	// if (INFO_STATUS)
 	// {
 	// 	cout << "getnp" << ret << endl;
 	// }
+
+	return ret;
+}
+
+unsigned int hicuts_router::GetNP(RboxHicuts &box, unsigned int dim)
+{
+	unsigned int spmfBuf = spmf(box.GetRuleNum(*rootMap));
+	unsigned int ret = 1;
+	
+	// Condition defines by No.1 heuristic rule
+	while (box.GetRuleNumSumInNP(*rootMap, ret, dim) + ret <= spmfBuf
+		 && ret <= box.nodeRange.DimCast(dim).length())
+	{
+		ret <<= 1;
+	}
 
 	return ret;
 }
@@ -336,6 +374,7 @@ hicuts_router::RboxHicuts *hicuts_router::RboxHicuts::GetNext(DATAItem &packet)
 	// packet info index / interval length = next node index
 
 	unsigned int intLen = nodeRange.DimCast(cutDimension).length() / np;
+	cout << intLen << endl;
 	unsigned int packetIndex = packet.DimCast(cutDimension) - nodeRange.DimCast(cutDimension).start;
 
 	unsigned int retIndex = packetIndex / intLen;
@@ -349,7 +388,7 @@ hicuts_router::RboxHicuts &hicuts_router::RboxHicuts::SetLeaf(RuleNodeBase &rule
 
 	while (scanPtr != nullptr)
 	{
-		if (scanPtr->item.isContained(nodeRange))
+		if (scanPtr->item.isIntersect(nodeRange))
 		{
 			ruleValid.push_back(&(scanPtr->item));
 		}
@@ -399,6 +438,61 @@ hicuts_router::RboxHicuts &hicuts_router::RboxHicuts::SetDimension(RuleNodeBase 
 	cutDimension = dimMin;
 	return *this;
 }
+
+
+hicuts_router::RboxHicuts &hicuts_router::RboxHicuts::SetDimension(RuleNodeBase &ruleMap, hicuts_router &router)
+{
+	unsigned int dimSign = dimension::sourIP;
+	unsigned int dimMin = dimSign;
+	unsigned int smMin = -1;
+	unsigned int temVar;
+
+	while (dimSign != dimension::protocol)
+	{
+		temVar = GetRuleNumSumInNP(ruleMap, router.GetNP(*this, dimSign), dimSign);
+
+		if (temVar < smMin)
+		{
+			smMin = temVar;
+			dimMin = dimSign;
+		}
+
+		// Go to next dimension
+		dimSign <<= 1;
+	}
+
+	// Set dim value
+	cutDimension = dimMin;
+	return *this;
+}
+
+unsigned int hicuts_router::RboxHicuts::GetDimension(RuleNodeBase &ruleMap, hicuts_router &router)
+{
+	unsigned int dimSign = dimension::sourIP;
+	unsigned int dimMin = dimSign;
+	unsigned int smMin = -1;
+	unsigned int temVar;
+
+	while (dimSign != dimension::protocol)
+	{
+		temVar = GetRuleNumSumInNP(ruleMap, router.GetNP(*this, dimSign), dimSign);
+
+		if (temVar < smMin)
+		{
+			smMin = temVar;
+			dimMin = dimSign;
+		}
+
+		// Go to next dimension
+		dimSign <<= 1;
+	}
+
+	// Set dim value
+	return dimMin;
+}
+
+
+
 hicuts_router::RboxHicuts &hicuts_router::RboxHicuts::CutBox(unsigned int np, unsigned int dim)
 {
 	long long lenBuf = nodeRange.DimCast(dim).length();
@@ -437,23 +531,13 @@ int hicuts_router::BuildTree(RboxHicuts &box)
 		return 0;
 	}
 
-	box.SetDimension(*rootMap);
-
 	box.np = GetNP(box);
 
+	box.SetDimension(*rootMap, *this);
 
-	// Cut BOX
 
-		// Space measure function decide number of partitions
 
-		// Decide cut from which dimension
-
-		
 	box.CutBox(box.np, box.cutDimension);
-
-	// For loop the cut(v), 
-		// Recusion, Build them again
-		// Check moudle at the very beginning will decide whether to go on.
 
 	for (auto i : box.next)
 	{
@@ -528,10 +612,11 @@ int hicuts_router::Match(void)
 
 	matchStartTime = clock();
 
-	RboxHicuts *scanPtr = rootNode;
+	RboxHicuts *scanPtr;
 
 	while (getline(dataStream, scanStr, '\n'))
 	{
+		scanPtr = rootNode;
 		// Read in a packet
 		scanData.read(scanStr);
 		
@@ -598,7 +683,13 @@ bool base_router::LinearSearch(DATAItem &packet)
 bool hicuts_router::RboxHicuts::LinearSearch(DATAItem &packet)
 {
 	bool isMatch = false;
-	unsigned int minClassID = ruleValid[0]->classID;
+	int minClassID = -1;
+
+	if (ruleValid.empty())
+	{
+		cout << "what? empty leaf??" << endl;
+		return false;
+	}
 
 	for (auto i : ruleValid)
 	{
@@ -606,7 +697,7 @@ bool hicuts_router::RboxHicuts::LinearSearch(DATAItem &packet)
 		{
 			isMatch = true;
 
-			if (i->classID < minClassID)
+			if ((int)i->classID < minClassID || minClassID == -1)
 			{
 				minClassID = i->classID;
 			}

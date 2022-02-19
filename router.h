@@ -52,7 +52,8 @@ public:
 	RANGE &ApplyMask(const string &ip, int maskBit);
 	bool isVaild(unsigned int var) {return (var >= start && var <= end);};
 	bool isVaild(RANGE &var) {return (var.start >= start && var.end <= end);};
-	bool isContained(RANGE &var) {return (isVaild(var.start) || isVaild(var.end) || isVaild(var));};
+	bool isContained(RANGE &var) {return (var.start <= start && var.end >= end);};
+	bool isIntersect(RANGE &var) {return (isVaild(var.start) || isVaild(var.end) || isVaild(var) || isContained(var));};
 };
 
 class PROTRANGE : public RANGE
@@ -68,7 +69,8 @@ public:
 	};
 	
 	bool isVaild(PROTRANGE &var) {return (var.start >= start && var.end <= end);};
-	bool isContained(PROTRANGE &var) {return (isVaild(var.start) || isVaild(var.end));};
+	bool isContained(PROTRANGE &var) {return (var.start <= start && var.end >= end);};
+	bool isIntersect(PROTRANGE &var) {return (isVaild(var.start) || isVaild(var.end) || isVaild(var) || isContained(var));};
 
 	bool isVaild(unsigned int var) {return (var >= start && var <= end);};
 };
@@ -151,8 +153,8 @@ public:
 											destPort.isVaild(packet.destPort) && proto.isVaild(packet.proto));};
 	bool isValid(RULEItem &packet) {return (sourIP.isVaild(packet.sourIP) && destIP.isVaild(packet.destIP) && sourPort.isVaild(packet.sourPort) &&
 											destPort.isVaild(packet.destPort) && proto.isVaild(packet.proto));};
-	bool isContained(RULEItem &boxRange) {return (sourIP.isContained(boxRange.sourIP) && destIP.isContained(boxRange.destIP) && sourPort.isContained(boxRange.sourPort) &&
-											destPort.isContained(boxRange.destPort) && proto.isContained(boxRange.proto));};
+	bool isIntersect(RULEItem &boxRange) {return (sourIP.isIntersect(boxRange.sourIP) && destIP.isIntersect(boxRange.destIP) && sourPort.isIntersect(boxRange.sourPort) &&
+											destPort.isIntersect(boxRange.destPort) && proto.isIntersect(boxRange.proto));};
 
 };
 
@@ -233,10 +235,14 @@ public:
 		bool LinearSearch(DATAItem &packet);
 		unsigned int GetRuleNum(RuleNodeBase & ruleMap);
 		unsigned int GetRuleNumSumInNP(RuleNodeBase &ruleMap, unsigned int np, unsigned int dim);
+		unsigned int GetRuleNumMaxInNP(RuleNodeBase &ruleMap, unsigned int np, unsigned int dim);
+		unsigned int GetDimension(RuleNodeBase &ruleMap, hicuts_router &router);
 		RboxHicuts *GetNext(DATAItem &packet);
 		RboxHicuts &SetNP(unsigned int var) {np = var; return *this;};
 		RboxHicuts &SetLeaf(RuleNodeBase &ruleMap);
 		RboxHicuts &SetDimension(RuleNodeBase &ruleMap);
+		RboxHicuts &SetDimension(RuleNodeBase &ruleMap, hicuts_router &router);
+
 		RboxHicuts &CutBox(unsigned int np, unsigned int dim);
 		
 	private:
@@ -261,7 +267,7 @@ private:
 	RboxHicuts *rootNode = nullptr;
 	RuleNodeBase *rootMap = nullptr;
 
-	unsigned int binth = 8;
+	unsigned int binth = 64;
 	unsigned int spFac = 4;
 
 	string ruleFileName = "rule";
@@ -281,6 +287,7 @@ private:
 protected:
 	inline unsigned int spmf(unsigned int n) {return spFac * n;};
 	unsigned int GetNP(RboxHicuts &box);
+	unsigned int GetNP(RboxHicuts &box, unsigned int dim);
 
 
 };
@@ -347,3 +354,22 @@ protected:
 	// spmf(N) = spfac * N
 
 // spaceMeasure(C(v)) = numRulesSum(child node) + numberOfPartition(C(v))
+
+
+
+
+
+
+// Logging functions
+
+inline std::ostream &InfoPrint(std::ostream &os, string str)
+{
+	os << "INFO || " << str << endl;
+	return os;
+}
+
+inline std::ostream &DebugPrint(std::ostream &os, string str)
+{
+	os << "DEBUG || " << str << endl;
+	return os;
+}
