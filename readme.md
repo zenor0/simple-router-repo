@@ -12,6 +12,7 @@ Compiled by **mingw64 + CMake**.
 
 ## Usage
 
+```bash
 usage: simple-router [options] ... <rule file> <data file>
 options:
   -o, --open         Output File         - assign an output file <list file> (overwrite existed file). (string [=ans])
@@ -19,7 +20,7 @@ options:
   -d, --debug        Debug Mode          - run router in debug mode.
   -i, --info         Show info           - show info, including time and memory info.
   -?, --help         print this message
-
+```
 
 ## Acknowledgment
 
