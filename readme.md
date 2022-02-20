@@ -9,6 +9,7 @@ This simple router implements packet classification (linear search, hi-cuts undo
 
 
 Compiled by **mingw64 + CMake**.
+Error known when compile with -O3.(Due to irresonable code)
 
 ## Usage
 
