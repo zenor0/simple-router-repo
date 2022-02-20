@@ -24,42 +24,43 @@ int main(int argc, char* argv[])
 		// dataFile
 		// algorithmName
 
-	base_router router;
+	hicuts_router router;
 
-	if (cmdParser.exist("benchmark"))
-	{
-		// Getlist file
+	// if (cmdParser.exist("benchmark"))
+	// {
+	// 	// Getlist file
 
-		// Read list file
-		std::vector<string> packetList;
-		double timeTotal = 0;
+	// 	// Read list file
+	// 	std::vector<string> packetList;
+	// 	double timeTotal = 0;
 
-		ReadPacketList(packetList, cmdParser.get<string>("benchmark"));
+	// 	ReadPacketList(packetList, cmdParser.get<string>("benchmark"));
 
-		for (auto i : packetList)
-		{
-			InfoPrint(cout, "Benchmark started! Parsing assigned <" + cmdParser.get<string>("benchmark") + ">...");
-			router.Init("rule", i, "output");
-			router.Match();
+	// 	InfoPrint(cout, "Benchmark started! Parsing assigned <" + cmdParser.get<string>("benchmark") + ">...");
+
+	// 	for (auto i : packetList)
+	// 	{
+	// 		router.Init("rule", i, "output");
+	// 		router.Match();
 			
-			InfoPrint(cout, i + " Matching finished!");
-			timeTotal += router.time();
-		}
+	// 		InfoPrint(cout, i + " Matching finished!");
+	// 		timeTotal += router.time();
+	// 	}
 
-		if (INFO_STATUS)
-		{
-			cout.precision(3);
-			cout << "INFO || Benchmark ended." << "\n"
-				<< "---------------------" << "\n"
-				<< "Totoal Time: " << timeTotal << "\n"
-				;
+	// 	if (INFO_STATUS)
+	// 	{
+	// 		cout.precision(3);
+	// 		cout << "INFO || Benchmark ended." << "\n"
+	// 			<< "---------------------" << "\n"
+	// 			<< "Totoal Time: " << timeTotal << "\n"
+	// 			;
 
-			cout << endl;
-		}
+	// 		cout << endl;
+	// 	}
 
 
-		return 0;
-	}
+	// 	return 0;
+	// }
 
 	// If benchmark mode on
 		// Parse the list file.

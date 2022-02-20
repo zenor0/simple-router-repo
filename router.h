@@ -48,6 +48,7 @@ public:
 	unsigned int start;
 	unsigned int end;
 
+	// Use long long to void overflow situation
 	long long length() {return (long long)end - start + 1;};
 	RANGE &ApplyMask(const string &ip, int maskBit);
 	bool isVaild(unsigned int var) {return (var >= start && var <= end);};
@@ -68,11 +69,10 @@ public:
 		return *this;
 	};
 	
+	bool isVaild(unsigned int var) {return (var >= start && var <= end);};
 	bool isVaild(PROTRANGE &var) {return (var.start >= start && var.end <= end);};
 	bool isContained(PROTRANGE &var) {return (var.start <= start && var.end >= end);};
 	bool isIntersect(PROTRANGE &var) {return (isVaild(var.start) || isVaild(var.end) || isVaild(var) || isContained(var));};
-
-	bool isVaild(unsigned int var) {return (var >= start && var <= end);};
 };
 
 
@@ -223,7 +223,7 @@ public:
 		RULEItem nodeRange;		// decide by upper node
 								// define this node's Range
 		int cutDimension = -1;		// dynamic
-		unsigned int np = 2;	// np(short for Number of Partitions), must be multiples of 2
+		unsigned int cutPartition = 2;	// np(short for Number of Partitions), must be multiples of 2
 
 		std::vector<RboxHicuts *> next;	//divided by cutDimension, cutCount partitions in total.
 
@@ -238,13 +238,15 @@ public:
 		unsigned int GetRuleNumMaxInNP(RuleNodeBase &ruleMap, unsigned int np, unsigned int dim);
 		unsigned int GetDimension(RuleNodeBase &ruleMap, hicuts_router &router);
 		RboxHicuts *GetNext(DATAItem &packet);
-		RboxHicuts &SetNP(unsigned int var) {np = var; return *this;};
+		RboxHicuts &SetNP(unsigned int var) {cutPartition = var; return *this;};
 		RboxHicuts &SetLeaf(RuleNodeBase &ruleMap);
 		RboxHicuts &SetDimension(RuleNodeBase &ruleMap);
 		RboxHicuts &SetDimension(RuleNodeBase &ruleMap, hicuts_router &router);
 
-		RboxHicuts &CutBox(unsigned int np, unsigned int dim);
-		
+		// RboxHicuts &CutBox(unsigned int np, unsigned int dim);
+		bool CutBox(unsigned int np, unsigned int dim);
+
+
 	private:
 	
 	};
@@ -267,7 +269,7 @@ private:
 	RboxHicuts *rootNode = nullptr;
 	RuleNodeBase *rootMap = nullptr;
 
-	unsigned int binth = 64;
+	unsigned int binth = 8;
 	unsigned int spFac = 4;
 
 	string ruleFileName = "rule";

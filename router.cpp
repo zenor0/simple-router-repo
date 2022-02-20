@@ -6,8 +6,6 @@
 // Close streams
 using std::getline;
 
-
-
 RULEItem &RULEItem::read(string rawRuleString)
 {
 	// sample rule:
@@ -115,32 +113,6 @@ base_router &base_router::Init()
 	return *this;
 }
 
-hicuts_router &hicuts_router::Init()
-{
-	// Initialize rootNode
-
-	outputStream.open(outputFileName, std::ostream::out | std::ostream::trunc);
-
-	ReadRuleMap(ruleFileName);
-
-
-	// Generalize full range
-	RboxHicuts *initBox = new RboxHicuts;
-
-	initBox->nodeRange.sourIP.ApplyMask("0.0.0.0", 0);
-	initBox->nodeRange.destIP.ApplyMask("0.0.0.0", 0);
-	initBox->nodeRange.sourPort.start = 0;
-	initBox->nodeRange.sourPort.end = 65565;
-	initBox->nodeRange.destPort.start = 0;
-	initBox->nodeRange.destPort.end = 65565;
-	initBox->nodeRange.proto.init("0x00/0x00");
-
-	rootNode = initBox;
-	BuildTree(*rootNode);
-
-	return *this;
-}
-
 
 int base_router::ReadRuleMap(const string &ruleFileName)
 {
@@ -195,7 +167,118 @@ int base_router::ReadRuleMap(const string &ruleFileName)
 	return 0;
 }
 
-// a stupid copy, del it after debug
+// Match! (linear search ver)
+
+int base_router::Match(void)
+{
+	std::ifstream dataStream(dataFileName, std::ifstream::in);
+	std::string scanStr;
+	DATAItem scanData;
+	// create a temp data variable;
+
+	// traverse tree match a rule
+
+	if (INFO_STATUS)
+	{
+		InfoPrint(cout, "Open \"" + dataFileName + "\" as data file.");
+	}
+
+
+	matchStartTime = clock();
+
+	while (getline(dataStream, scanStr, '\n'))
+	{
+		// Read in a packet
+		scanData.read(scanStr);
+		
+		// Traverse the list, match rules.
+
+		if (!LinearSearch(scanData))
+		{
+			// TO-DO
+			// Throw a error
+		}
+
+		// TO-DO
+		// Change to formatted output
+
+		outputStream << scanData.result << "\n";
+
+		// TO-DO
+		// Catch some errors
+
+	}
+
+	outputStream << endl;
+
+	matchEndTime = clock();
+
+	return 0;
+}
+
+bool base_router::LinearSearch(DATAItem &packet)
+{
+	RuleNodeBase *scanPtr = rootMap;
+
+	while (scanPtr != nullptr)
+	{
+		// Match one by one
+		
+		if (scanPtr->item.isValid(packet))
+		{
+			if (DEBUG_STATUS)
+			{
+				DebugPrint(cout, "Matched! ruleID: " + std::to_string(scanPtr->item.classID));
+			}
+
+			packet.result = scanPtr->item.classID;
+			return true;
+		}
+
+		scanPtr = scanPtr->next;
+	}
+
+	if (DEBUG_STATUS)
+	{
+		DebugPrint(cout, "NOT matched! dataInfo: ");
+		packet.print(cout);
+	}
+	// Throw a error
+	packet.result = -1;
+	return false;
+}
+
+
+// Hicuts router implementation
+hicuts_router &hicuts_router::Init()
+{
+	// Initialize rootNode
+
+	outputStream.open(outputFileName, std::ostream::out | std::ostream::trunc);
+
+	ReadRuleMap(ruleFileName);
+
+
+	// Generalize full range Node as the rootBox
+	// Initialize rootBox and set it as full range
+	RboxHicuts *initBox = new RboxHicuts;
+
+	initBox->nodeRange.sourIP.ApplyMask("0.0.0.0", 0);
+	initBox->nodeRange.destIP.ApplyMask("0.0.0.0", 0);
+	initBox->nodeRange.sourPort.start = 0;
+	initBox->nodeRange.sourPort.end = 65565;
+	initBox->nodeRange.destPort.start = 0;
+	initBox->nodeRange.destPort.end = 65565;
+	initBox->nodeRange.proto.init("0x00/0x00");
+
+	rootNode = initBox;
+	BuildTree(*rootNode);
+
+	return *this;
+}
+
+
+// Considering merge the function with base one
 int hicuts_router::ReadRuleMap(const string &ruleFileName)
 {
 	// Base router use naive algorithm
@@ -273,13 +356,13 @@ unsigned int hicuts_router::RboxHicuts::GetRuleNumSumInNP(RuleNodeBase &ruleMap,
 {
 	unsigned int ret = 0;
 
-	unsigned int intBuf = nodeRange.DimCast(dim).length() / np;	// intervals
+	unsigned int intvCache = nodeRange.DimCast(dim).length() / np;	// intervals
 	unsigned int boxRangeOffset = nodeRange.DimCast(dim).start;	// start offset
 
 	RboxHicuts newBox = *this;
 	RANGE *newBoxRange = &(newBox.nodeRange.DimCast(dim));	// set a pointer for the sake of convenience
 	newBoxRange->start = boxRangeOffset;
-	newBoxRange->end = intBuf - 1 + boxRangeOffset;
+	newBoxRange->end = intvCache - 1 + boxRangeOffset;
 
 	for (unsigned int i = 0; i < np; i++)
 	{
@@ -287,8 +370,8 @@ unsigned int hicuts_router::RboxHicuts::GetRuleNumSumInNP(RuleNodeBase &ruleMap,
 		// Updata newBox range, let it be a presumably box
 
 
-		newBoxRange->start += intBuf;
-		newBoxRange->end += intBuf;
+		newBoxRange->start += intvCache;
+		newBoxRange->end += intvCache;
 	}
 
 
@@ -303,13 +386,13 @@ unsigned int hicuts_router::RboxHicuts::GetRuleNumSumInNP(RuleNodeBase &ruleMap,
 
 unsigned int hicuts_router::RboxHicuts::GetRuleNumMaxInNP(RuleNodeBase &ruleMap, unsigned int np, unsigned int dim)
 {
-	unsigned int intBuf = nodeRange.DimCast(dim).length() / np;	// intervals
+	unsigned int intvCache = nodeRange.DimCast(dim).length() / np;	// intervals
 	unsigned int boxRangeOffset = nodeRange.DimCast(dim).start;	// start offset
 
 	RboxHicuts newBox = *this;
 	RANGE *newBoxRange = &(newBox.nodeRange.DimCast(dim));	// set a pointer for the sake of convenience
 	newBoxRange->start = boxRangeOffset;
-	newBoxRange->end = intBuf - 1 + boxRangeOffset;
+	newBoxRange->end = intvCache - 1 + boxRangeOffset;
 
 	unsigned int maxVar = 0;
 	unsigned int temVar;
@@ -324,8 +407,8 @@ unsigned int hicuts_router::RboxHicuts::GetRuleNumMaxInNP(RuleNodeBase &ruleMap,
 			maxVar = temVar;
 		}
 
-		newBoxRange->start += intBuf;
-		newBoxRange->end += intBuf;
+		newBoxRange->start += intvCache;
+		newBoxRange->end += intvCache;
 	}
 
 	return maxVar;
@@ -334,37 +417,54 @@ unsigned int hicuts_router::RboxHicuts::GetRuleNumMaxInNP(RuleNodeBase &ruleMap,
 unsigned int hicuts_router::GetNP(RboxHicuts &box)
 {
 	unsigned int spmfBuf = spmf(box.GetRuleNum(*rootMap));
-	unsigned int ret = 1;
+	unsigned int ret = 2;
 	unsigned int dim = box.GetDimension(*rootMap, *this);
 	
 	// Condition defines by No.1 heuristic rule
-	while (box.GetRuleNumSumInNP(*rootMap, ret, dim) + ret <= spmfBuf
-		 && ret <= box.nodeRange.DimCast(dim).length())
+	while (1)
 	{
+		if (box.GetRuleNumSumInNP(*rootMap, ret, dim) + ret > spmfBuf
+		 || ret > box.nodeRange.DimCast(dim).length())
+		{
+			ret >>= 1;
+			break;
+		}
 		ret <<= 1;
 	}
-
 
 	// if (INFO_STATUS)
 	// {
 	// 	cout << "getnp" << ret << endl;
 	// }
-
 	return ret;
 }
 
 unsigned int hicuts_router::GetNP(RboxHicuts &box, unsigned int dim)
 {
+	// If not getting work, remove that multiples of 2 rule..
+	// And binary search to optimize argorithm
+
 	unsigned int spmfBuf = spmf(box.GetRuleNum(*rootMap));
-	unsigned int ret = 1;
+	unsigned int ret = 2;
 	
 	// Condition defines by No.1 heuristic rule
-	while (box.GetRuleNumSumInNP(*rootMap, ret, dim) + ret <= spmfBuf
-		 && ret <= box.nodeRange.DimCast(dim).length())
+	// while (box.GetRuleNumSumInNP(*rootMap, ret, dim) + ret <= spmfBuf
+	// 	 && ret < box.nodeRange.DimCast(dim).length())
+	// {
+	// 	ret <<= 1;
+	// }
+
+	while (1)
 	{
+		if (box.GetRuleNumSumInNP(*rootMap, ret, dim) + ret > spmfBuf
+		 || ret > box.nodeRange.DimCast(dim).length())
+		{
+			ret >>= 1;
+			break;
+		}
 		ret <<= 1;
 	}
-
+	
 	return ret;
 }
 
@@ -373,7 +473,7 @@ hicuts_router::RboxHicuts *hicuts_router::RboxHicuts::GetNext(DATAItem &packet)
 	// hash function
 	// packet info index / interval length = next node index
 
-	unsigned int intLen = nodeRange.DimCast(cutDimension).length() / np;
+	unsigned int intLen = nodeRange.DimCast(cutDimension).length() / cutPartition;
 	cout << intLen << endl;
 	unsigned int packetIndex = packet.DimCast(cutDimension) - nodeRange.DimCast(cutDimension).start;
 
@@ -396,6 +496,7 @@ hicuts_router::RboxHicuts &hicuts_router::RboxHicuts::SetLeaf(RuleNodeBase &rule
 		scanPtr = scanPtr->next;
 	}
 
+	// Delete after debugging
 	if (ruleValid.empty() == true)
 	{
 		cout << "wtf, empty leaf" << endl;
@@ -439,21 +540,30 @@ hicuts_router::RboxHicuts &hicuts_router::RboxHicuts::SetDimension(RuleNodeBase 
 	return *this;
 }
 
-
 hicuts_router::RboxHicuts &hicuts_router::RboxHicuts::SetDimension(RuleNodeBase &ruleMap, hicuts_router &router)
 {
+	// Minimizing maxj(NumRules(childj)) in an attemp to decrease the worst-case depth of the tree
+
+	// Try to cut from different dimentsions
+	// need np	// 
+
+	// Find the max node
+
+	// Fine the dimension that will cause the min(maxnode).
+
 	unsigned int dimSign = dimension::sourIP;
 	unsigned int dimMin = dimSign;
 	unsigned int smMin = -1;
+	unsigned int minVar = -1;
 	unsigned int temVar;
 
 	while (dimSign != dimension::protocol)
 	{
-		temVar = GetRuleNumSumInNP(ruleMap, router.GetNP(*this, dimSign), dimSign);
+		temVar = GetRuleNumMaxInNP(ruleMap, router.GetNP(*this, dimSign), dimSign);
 
-		if (temVar < smMin)
+		if (temVar < minVar)
 		{
-			smMin = temVar;
+			minVar = temVar;
 			dimMin = dimSign;
 		}
 
@@ -491,12 +601,17 @@ unsigned int hicuts_router::RboxHicuts::GetDimension(RuleNodeBase &ruleMap, hicu
 	return dimMin;
 }
 
-
-
-hicuts_router::RboxHicuts &hicuts_router::RboxHicuts::CutBox(unsigned int np, unsigned int dim)
+bool hicuts_router::RboxHicuts::CutBox(unsigned int np, unsigned int dim)
 {
+	if (nodeRange.DimCast(dim).length() == 1 || np > nodeRange.DimCast(dim).length() || np == 1)
+	{
+		// cout << "can't cut" << endl;
+
+		return false;
+	}
+
 	long long lenBuf = nodeRange.DimCast(dim).length();
-	unsigned int intBuf = lenBuf / np;
+	unsigned int intvCache = lenBuf / np;		// Interval cache
 	unsigned int boxRangeOffset = nodeRange.DimCast(dim).start;
 
 	RboxHicuts *newBox = nullptr;
@@ -507,8 +622,8 @@ hicuts_router::RboxHicuts &hicuts_router::RboxHicuts::CutBox(unsigned int np, un
 
 		// Cut range as assigned dimension
 		newBox->nodeRange = this->nodeRange;
-		newBox->nodeRange.DimCast(dim).start = i * intBuf + boxRangeOffset;
-		newBox->nodeRange.DimCast(dim).end = (i + 1) * intBuf - 1 + boxRangeOffset;
+		newBox->nodeRange.DimCast(dim).start = i * intvCache + boxRangeOffset;
+		newBox->nodeRange.DimCast(dim).end = (i + 1) * intvCache - 1 + boxRangeOffset;
 
 		// Append newBox, make it Box's child node
 		next.push_back(newBox);
@@ -516,7 +631,7 @@ hicuts_router::RboxHicuts &hicuts_router::RboxHicuts::CutBox(unsigned int np, un
 
 	// cout << "dim: " << dim << "np: " << np << endl;
 
-	return *this;
+	return true;
 }
 
 int hicuts_router::BuildTree(RboxHicuts &box)
@@ -528,106 +643,96 @@ int hicuts_router::BuildTree(RboxHicuts &box)
 	if (box.GetRuleNum(*rootMap) <= binth)
 	{
 		box.SetLeaf(*rootMap);
+
+		// Return to end recursion
 		return 0;
 	}
 
-	box.np = GetNP(box);
-
+	box.cutPartition = GetNP(box);
 	box.SetDimension(*rootMap, *this);
 
 
-
-	box.CutBox(box.np, box.cutDimension);
-
-	for (auto i : box.next)
+	if (box.CutBox(box.cutPartition, box.cutDimension))
 	{
-		BuildTree(*i);
+		for (auto i : box.next)
+		{
+			BuildTree(*i);
+		}
+	}
+	else
+	{
+		box.SetLeaf(*rootMap);
+		return 0;
 	}
 
 }
 
-// Match! (linear search ver)
+// Considering merge the function with base one
 
-int base_router::Match(void)
+bool hicuts_router::RboxHicuts::LinearSearch(DATAItem &packet)
 {
-	std::ifstream dataStream(dataFileName, std::ifstream::in);
-	std::string scanStr;
-	DATAItem scanData;
-	// create a temp data variable;
+	bool isMatch = false;
+	unsigned int minClassID = -1;	// overflow deliberatly
 
-	// traverse tree match a rule
-
-	if (INFO_STATUS)
+	// Delete after debugging
+	if (ruleValid.empty())
 	{
-		InfoPrint(cout, "Open \"" + dataFileName + "\" as data file.");
+		cout << "what? empty leaf??" << endl;
+		return false;
 	}
 
-
-	matchStartTime = clock();
-
-	while (getline(dataStream, scanStr, '\n'))
+	if (isLeaf == false)
 	{
-		// Read in a packet
-		scanData.read(scanStr);
-		
-		// Traverse the list, match rules.
+		cout << "what? not a leaf??" << endl;
+		return false;
+	}
 
-		if (!LinearSearch(scanData))
+	for (auto i : ruleValid)
+	{
+		if (i->isValid(packet) == false)
 		{
-			// TO-DO
-			// Throw a error
+			continue;
 		}
 
-		// TO-DO
-		// Change to formatted output
+		isMatch = true;
 
-		outputStream << scanData.result << "\n";
-
-		// TO-DO
-		// Catch some errors
-
+		// Find min, as well as the HIGHEST prority rule
+		if (i->classID < minClassID)
+		{
+			minClassID = i->classID;
+		}
 	}
 
-	outputStream << endl;
+	packet.result = isMatch ? minClassID : -1;
 
-	matchEndTime = clock();
-
-	return 0;
+	return isMatch;
 }
 
 int hicuts_router::Match(void)
 {
 	std::ifstream dataStream(dataFileName, std::ifstream::in);
-	std::string scanStr;
+	std::string scanPacket;
+	RboxHicuts *scanPtr;
 	DATAItem scanData;
-	// create a temp data variable;
-
-	// traverse tree match a rule
 
 	if (INFO_STATUS)
 	{
 		InfoPrint(cout, "Open \"" + dataFileName + "\" as data file.");
 	}
 
-
 	matchStartTime = clock();
-
-	RboxHicuts *scanPtr;
-
-	while (getline(dataStream, scanStr, '\n'))
+	while (getline(dataStream, scanPacket, '\n'))
 	{
-		scanPtr = rootNode;
 		// Read in a packet
-		scanData.read(scanStr);
-		
+		scanData.read(scanPacket);
+
+		// Traverse decision tree till reach leafNode
+		scanPtr = rootNode;
 		while (!scanPtr->isLeaf)
 		{
-			// Go next node
 			scanPtr = scanPtr->GetNext(scanData);
 		}
 
-		// Find leaf Node
-		// Search leaf node, find right node
 		scanPtr->LinearSearch(scanData);
 
 		// TO-DO
@@ -636,78 +741,15 @@ int hicuts_router::Match(void)
 
 		// TO-DO
 		// Catch some errors
-
 	}
 
+	// Flush buffer
 	outputStream << endl;
-
 	matchEndTime = clock();
 
 	return 0;
 }
 
-
-
-bool base_router::LinearSearch(DATAItem &packet)
-{
-	RuleNodeBase *scanPtr = rootMap;
-
-	while (scanPtr != nullptr)
-	{
-		// Match one by one
-		
-		if (scanPtr->item.isValid(packet))
-		{
-			if (DEBUG_STATUS)
-			{
-				DebugPrint(cout, "Matched! ruleID: " + std::to_string(scanPtr->item.classID));
-			}
-
-			packet.result = scanPtr->item.classID;
-			return true;
-		}
-
-		scanPtr = scanPtr->next;
-	}
-
-	if (DEBUG_STATUS)
-	{
-		DebugPrint(cout, "NOT matched! dataInfo: ");
-		packet.print(cout);
-	}
-	// Throw a error
-	packet.result = -1;
-	return false;
-}
-
-bool hicuts_router::RboxHicuts::LinearSearch(DATAItem &packet)
-{
-	bool isMatch = false;
-	int minClassID = -1;
-
-	if (ruleValid.empty())
-	{
-		cout << "what? empty leaf??" << endl;
-		return false;
-	}
-
-	for (auto i : ruleValid)
-	{
-		if (i->isValid(packet))
-		{
-			isMatch = true;
-
-			if ((int)i->classID < minClassID || minClassID == -1)
-			{
-				minClassID = i->classID;
-			}
-		}
-	}
-
-	packet.result = minClassID;
-
-	return isMatch;
-}
 
 // Data pre-process functions
 unsigned int ConvertIPToInt(const string &ip)
