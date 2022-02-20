@@ -432,10 +432,6 @@ unsigned int hicuts_router::GetNP(RboxHicuts &box)
 		ret <<= 1;
 	}
 
-	// if (INFO_STATUS)
-	// {
-	// 	cout << "getnp" << ret << endl;
-	// }
 	return ret;
 }
 
@@ -448,16 +444,12 @@ unsigned int hicuts_router::GetNP(RboxHicuts &box, unsigned int dim)
 	unsigned int ret = 2;
 	
 	// Condition defines by No.1 heuristic rule
-	// while (box.GetRuleNumSumInNP(*rootMap, ret, dim) + ret <= spmfBuf
-	// 	 && ret < box.nodeRange.DimCast(dim).length())
-	// {
-	// 	ret <<= 1;
-	// }
-
+	// 1.
+	// 2. can't go beyond range length
 	while (1)
 	{
 		if (box.GetRuleNumSumInNP(*rootMap, ret, dim) + ret > spmfBuf
-		 || ret > box.nodeRange.DimCast(dim).length())
+			|| ret > box.nodeRange.DimCast(dim).length())
 		{
 			ret >>= 1;
 			break;
@@ -474,7 +466,7 @@ hicuts_router::RboxHicuts *hicuts_router::RboxHicuts::GetNext(DATAItem &packet)
 	// packet info index / interval length = next node index
 
 	unsigned int intLen = nodeRange.DimCast(cutDimension).length() / cutPartition;
-	cout << intLen << endl;
+
 	unsigned int packetIndex = packet.DimCast(cutDimension) - nodeRange.DimCast(cutDimension).start;
 
 	unsigned int retIndex = packetIndex / intLen;
@@ -506,46 +498,11 @@ hicuts_router::RboxHicuts &hicuts_router::RboxHicuts::SetLeaf(RuleNodeBase &rule
 	return *this;
 }
 
-hicuts_router::RboxHicuts &hicuts_router::RboxHicuts::SetDimension(RuleNodeBase &ruleMap)
-{
-	// There is 4 way to decide the cutting dimension according to argorithm
-	// Here choose the laziset way to go
-	
-	// Minimize sm()! by using exist functions
-	// since np is fixed, what we gonna to do is to find the min(sum(rule of children))
-
-	unsigned int constnp = 8;
-
-	unsigned int dimSign = dimension::sourIP;
-	unsigned int dimMin = dimSign;
-	unsigned int smMin = GetRuleNumSumInNP(ruleMap, constnp, dimSign);
-	unsigned int temVar;
-
-	while (dimSign != dimension::protocol)
-	{
-		temVar = GetRuleNumSumInNP(ruleMap, constnp, dimSign);
-
-		if (temVar < smMin)
-		{
-			smMin = temVar;
-			dimMin = dimSign;
-		}
-
-		// Go to next dimension
-		dimSign <<= 1;
-	}
-
-	// Set dim value
-	cutDimension = dimMin;
-	return *this;
-}
-
 hicuts_router::RboxHicuts &hicuts_router::RboxHicuts::SetDimension(RuleNodeBase &ruleMap, hicuts_router &router)
 {
 	// Minimizing maxj(NumRules(childj)) in an attemp to decrease the worst-case depth of the tree
 
-	// Try to cut from different dimentsions
-	// need np	// 
+	// Try to cut from different dimensions
 
 	// Find the max node
 
@@ -557,7 +514,7 @@ hicuts_router::RboxHicuts &hicuts_router::RboxHicuts::SetDimension(RuleNodeBase 
 	unsigned int minVar = -1;
 	unsigned int temVar;
 
-	while (dimSign != dimension::protocol)
+	while (dimSign != dimension::destPort)
 	{
 		temVar = GetRuleNumMaxInNP(ruleMap, router.GetNP(*this, dimSign), dimSign);
 
@@ -581,15 +538,16 @@ unsigned int hicuts_router::RboxHicuts::GetDimension(RuleNodeBase &ruleMap, hicu
 	unsigned int dimSign = dimension::sourIP;
 	unsigned int dimMin = dimSign;
 	unsigned int smMin = -1;
+	unsigned int minVar = -1;
 	unsigned int temVar;
 
-	while (dimSign != dimension::protocol)
+	while (dimSign != dimension::destPort)
 	{
-		temVar = GetRuleNumSumInNP(ruleMap, router.GetNP(*this, dimSign), dimSign);
+		temVar = GetRuleNumMaxInNP(ruleMap, router.GetNP(*this, dimSign), dimSign);
 
-		if (temVar < smMin)
+		if (temVar < minVar)
 		{
-			smMin = temVar;
+			minVar = temVar;
 			dimMin = dimSign;
 		}
 
@@ -715,6 +673,8 @@ int hicuts_router::Match(void)
 	RboxHicuts *scanPtr;
 	DATAItem scanData;
 
+	int debugCount = 0;
+
 	if (INFO_STATUS)
 	{
 		InfoPrint(cout, "Open \"" + dataFileName + "\" as data file.");
@@ -730,8 +690,12 @@ int hicuts_router::Match(void)
 		scanPtr = rootNode;
 		while (!scanPtr->isLeaf)
 		{
+			debugCount++;
 			scanPtr = scanPtr->GetNext(scanData);
 		}
+
+		// cout << "debug: " << debugCount << endl;
+		debugCount = 0;
 
 		scanPtr->LinearSearch(scanData);
 
