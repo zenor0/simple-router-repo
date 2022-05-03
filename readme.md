@@ -2,14 +2,15 @@
 
 ## Introduction
 
-This repository is used to store OOP pre-learning labs.
+This is a repository storing OOP pre-learning project.
 
-This simple router implements packet classification (linear search, hi-cuts undone yet).
+A simple router implements packet classification (linear search and unoptimized hi-cuts algorithms).
 
 
 
 Compiled by **mingw64 + CMake**.
-Error known when compile with -O3.(Due to irresonable code)
+
+Error known when compile with `-O3`.(Due to my terrible code)
 
 ## Usage
 
@@ -25,4 +26,4 @@ options:
 
 ## Acknowledgment
 
-command line parsing is supported by an opensource repo - cmdline[https://github.com/tanakh/cmdline].
+command line parsing is powered by an opensource repo - cmdline[https://github.com/tanakh/cmdline].
