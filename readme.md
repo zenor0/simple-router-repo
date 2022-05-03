@@ -10,7 +10,7 @@ A simple router implements packet classification (linear search and unoptimized 
 
 Compiled by **mingw64 + CMake**.
 
-Error known when compile with `-O3`.(Due to my terrible code)
+An Error was known when compiling this project with `-O3`. (owing to my terrible codes)
 
 ## Usage
 
@@ -26,4 +26,4 @@ options:
 
 ## Acknowledgment
 
-command line parsing is powered by an opensource repo - cmdline[https://github.com/tanakh/cmdline].
+command line parsing is powered by an opensource repo - [cmdline](https://github.com/tanakh/cmdline).
